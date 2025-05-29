@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="./favicon.svg" type="image/x-icon">
-    <title>Dr. DNF</title>
+    <title>3BLD</title>
     <style>
         body {
             display: flex;
@@ -236,7 +236,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             width: 400px;
-            height: 300px;
+            height: 250px;
             background-color: rgba(30,30,30,0.95);
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
@@ -338,12 +338,8 @@
         <input type="text" id="server-url" class="server-input" placeholder="Server URL">
         <input type="password" id="server-password" class="server-input" placeholder="Password">
         <div class="setting">
-            <label>Always Push</label>
-            <input type="checkbox" id="always-push" onchange="saveSettings()">
-        </div>
-        <div class="setting">
-            <label>Push next time</label>
-            <input type="checkbox" id="push-next" onchange="saveSettings()">
+            <label>No Push</label>
+            <input type="checkbox" id="no-push" onchange="saveSettings()">
         </div>
         <button id="back-button" onclick="saveServerSettings()">Save</button>
         <button id="back-button" onclick="toggleServerPanel()">Close</button>
@@ -371,7 +367,9 @@ function forceUpdate() {
     } else if (print) {
         print('Service worker not ready.');
     }
-    location.reload();
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
 }
 
 const colorMapping = {
@@ -545,20 +543,20 @@ for (let cIdx1 = 3; cIdx1 < 24; cIdx1 += 3) {
 }
 
 // Server
-let serverUrl = localStorage.getItem('bld.serverUrl') || '', serverPassword = localStorage.getItem('bld.serverPswd') || '', alwaysPush = localStorage.getItem('bld.alwaysPush') === 'true', pushNext = localStorage.getItem('bld.pushNext') === 'true', serverConnected = serverUrl && serverPassword;
+let serverUrl = localStorage.getItem('bld.serverUrl') || '', serverPassword = localStorage.getItem('bld.serverPswd') || '', noPush = localStorage.getItem('bld.noPush') === 'true', serverConnected = serverUrl && serverPassword;
 function saveServerSettings() {
     serverUrl = document.getElementById('server-url').value;
     serverPassword = document.getElementById('server-password').value;
-    alwaysPush = document.getElementById('always-push').checked;
-    pushNext = document.getElementById('push-next').checked;
+    noPush = document.getElementById('no-push').checked;
+    serverConnected = serverUrl && serverPassword;
 
     localStorage.setItem('bld.serverUrl', serverUrl);
     localStorage.setItem('bld.serverPswd', serverPassword);
-    localStorage.setItem('bld.alwaysPush', alwaysPush);
-    localStorage.setItem('bld.pushNext', pushNext);
+    localStorage.setItem('bld.noPush', noPush);
 
     getServer(true);
     toggleServerPanel();
+    forceUpdate();
 }
 
 function toggleServerPanel() {
@@ -572,8 +570,7 @@ function toggleServerPanel() {
         
         document.getElementById('server-url').value = serverUrl;
         document.getElementById('server-password').value = serverPassword;
-        document.getElementById('always-push').checked = alwaysPush;
-        document.getElementById('push-next').checked = pushNext;
+        document.getElementById('no-push').checked = noPush;
     }
 }
 
@@ -604,6 +601,7 @@ function updateMem(text) {
 }
 function updateStats(text) {
     text.split(/\r?\n/).forEach(item => {
+        if (item.trim().length == 0) return;
         const [key, value] = item.split('=');
         [stats[key].times, stats[key].mark] = value.split(',').map(Number);
     });
@@ -635,9 +633,12 @@ function getItem(key, func, forceServer=false) {
     }
 }
 function getServer(forceServer=false) {
+    if (!serverConnected){
+        print('No server.');
+    }
     getItem('alg', updateAlg, forceServer);
     getItem('mem', updateMem, forceServer);
-    getItem('stats', updateStats, (forceServer || alwaysPush) && !pushNext);
+    getItem('stats', updateStats, forceServer);
 }
 
 function isNonPro(key){
@@ -813,7 +814,7 @@ const pushStats = (function() {
   return function(text) {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
-        if (!serverUrl || !serverConnected || !(alwaysPush || pushNext)) return;
+        if (!serverConnected || noPush) return;
         fetch(`${serverUrl}`, {
             method: 'POST',
             headers: {
@@ -823,9 +824,6 @@ const pushStats = (function() {
                 text: text,
                 pswd: serverPassword
             })
-        }).then(response => response.text()).then(text => {
-            pushNext = false;
-            localStorage.setItem('bld.pushNext', 'false');
         }).catch(err => {
             console.error(`Error pushing stats: ${err}`);
         });
@@ -836,46 +834,52 @@ const pushStats = (function() {
 function saveStats(){
     let statStr = Object.keys(stats).map(key => `${key}=${stats[key].times},${stats[key].mark}`).join('\n');
     localStorage.setItem('bld.stats', statStr);
-    pushStats(statStr);
 }
 
 function markTimesAndUpdateScramble(stat){
     event.preventDefault();
+    let statToPush = [];
     ecCode.forEach(key => {
         let stat = stats[key];
         if (!stat) return;
         stat.times++;
+        statToPush.push(`${key}=${stat.times},${stat.mark}`);
     });
     saveStats();
+    pushStats(statToPush.join('\n'));
     newScramble();
 }
 
 function addMark(keys){
-    let realKeys = [];
+    let realKeys = [], statToPush = [];
     keys.forEach(key => {
         let stat = stats[key];
         if (!stat) return;
         stat.mark++;
         realKeys.push(key);
+        statToPush.push(`${key}=${stat.times},${stat.mark}`);
     });
     if (realKeys.length > 0){
         print(`Add Mark: ${realKeys.map(key => `${key}(${stats[key].mark}/${stats[key].times})`).join(', ')}`);
         saveStats();
+        pushStats(statToPush.join('\n'));
     }
 }
 
 function removeMark(keys){
-    let realKeys = [];
+    let realKeys = [], statsToPush = [];
     keys.forEach(key => {
         let stat = stats[key];
         if (!stat) return;
         stat.times = 0;
         stat.mark = 0;
         realKeys.push(key);
+        statsToPush.push(`${key}=${stat.times},${stat.mark}`);
     });
     if (realKeys.length > 0){
         print(`Remove Mark: ${realKeys.map(key => `${key}(${stats[key].mark}/${stats[key].times})`).join(', ')}`);
         saveStats();
+        pushStats(statsToPush.join('\n'));
     }
 }
 
@@ -1032,7 +1036,11 @@ document.addEventListener('keydown', function(event) {
                     .sort((a, b) => (stats[b].mark - stats[a].mark) || (stats[a].times - stats[b].times)).slice(0, numTop);
                 print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${stats[key].mark}/${stats[key].times})`).join(', ')}`);
                 break;
+            case 'push':
+                pushStats(localStorage.getItem('bld.stats'));
+                break;
             case 'ud':
+                getServer(true);
                 forceUpdate();
                 break;
             default:
