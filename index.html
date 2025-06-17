@@ -507,7 +507,7 @@ function genCube(bfCode){
 }
 
 // Blank Stats
-let stats = {}, mm = parseInt(localStorage.getItem('bld.moreMark')) == 'true' ? 4 : 0;
+let stats = {}, mm = localStorage.getItem('bld.moreMark') == 'true' ? 4 : 0;
 function initStat(key, cat) {
     stats[key] = {times: 0, mark: 0, more: Math.random()<0.04?mm:0, cat: cat};
 }
@@ -631,17 +631,7 @@ function getItem(key, func, forceServer=false) {
         savedItem = localStorage.getItem(`bld.${key}`);
     }
     if (serverUrl && (!savedItem || forceServer)) {
-        fetch(serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                file: key,
-                text: '',
-                pswd: serverPassword
-            })
-        })
+        fetch(`${serverUrl}/${key}`)
         .then(response => response.text())
         .then(text => {
             savedItem = text;
@@ -916,10 +906,9 @@ function getAlgInfo(key){
     const code = codeDict[key.toUpperCase()] || '*';
     const alg = algs[key] || '*';
     const output = [
-        `${alg} (${code})`,
-        `Total=${stats[key].times}`,
-        `Mark=${stats[key].mark}` + (stats[key].more > 0 ? `(+${stats[key].more})` : ''),
-        `Weight=${getWeight(stats[key]).toFixed(2)}`
+        code,
+        alg,
+        `${stats[key].mark}${stats[key].more > 0 ? `(+${stats[key].more})` : ''}/${stats[key].times} [${getWeight(stats[key]).toFixed(2)}]`
     ];
     return output;
 }
