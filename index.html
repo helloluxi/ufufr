@@ -548,34 +548,15 @@ function saveServerSettings() {
     let _serverUrl = document.getElementById('server-url').value;
     let _serverPassword = document.getElementById('server-password').value;
     noPush = document.getElementById('no-push').checked;
-    if (!_serverUrl || !_serverPassword) return;
-
-    fetch(`${_serverUrl}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            file: 'test',
-            text: '',
-            pswd: _serverPassword
-        })
-    }).then(response => {
-        if (response.ok) {
-            serverUrl = _serverUrl;
-            serverPassword = _serverPassword;
-            localStorage.setItem('bld.serverUrl', serverUrl);
-            localStorage.setItem('bld.serverPswd', serverPassword);
-            localStorage.setItem('bld.noPush', noPush);
-            getServer(true);
-            toggleServerPanel();
-            forceUpdate();
-        } else {
-            print(`Server connection failed: ${response.status} ${response.statusText}`);
-        }
-    }).catch(err => {
-        console.error(`Error pushing stats: ${err}`);
-    });
+    if (!_serverUrl) return;
+    serverUrl = _serverUrl;
+    serverPassword = _serverPassword;
+    localStorage.setItem('bld.serverUrl', serverUrl);
+    localStorage.setItem('bld.serverPswd', serverPassword);
+    localStorage.setItem('bld.noPush', noPush);
+    getServer(true);
+    toggleServerPanel();
+    forceUpdate();
 }
 
 function toggleServerPanel() {
@@ -621,8 +602,15 @@ function updateMem(text) {
 function updateStats(text) {
     text.split(/\r?\n/).forEach(item => {
         if (item.trim().length == 0) return;
-        const [key, value] = item.split('=');
-        [stats[key].times, stats[key].mark] = value.split(',').map(Number);
+        try{
+            const [key, value] = item.split('=');
+            const [times, mark] = value.split(',').map(Number);
+            if (Number.isInteger(times) && times >= 0 && Number.isInteger(mark) && mark >= 0) {
+                [stats[key].times, stats[key].mark] = [times, mark];
+            }
+        } catch (e) {
+            console.error(`Error parsing stats line: ${item}`, e);
+        }
     });
 }
 function getItem(key, func, forceServer=false) {
@@ -802,7 +790,6 @@ function newScramble(){
                 ecCode.splice(ecCode.length - sf.length, 1);
             }
         }
-        // console.log(`[Cube] ${cube}`);
         const numToLearn = Object.keys(stats).filter(key => isNonPro(key) && stats[key].times == 0).length;
         if (numToLearn == 0 && !congrated){
             alert('Congratulations, you have learned all 818 algs!');
@@ -839,12 +826,15 @@ const pushStats = (function() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                file: 'save',
                 text: text,
                 pswd: serverPassword
             })
+        }).then(response => {
+            if (!response.ok) {
+                print(`Failed to push: ${response.status} ${response.statusText}`);
+            }
         }).catch(err => {
-            console.error(`Error pushing stats: ${err}`);
+            print(`Error pushing stats: ${err}`);
         });
     }, delay);
   };
