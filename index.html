@@ -744,6 +744,11 @@ const timer = new Timer('canvas', 'timer-container', 'timer-display', 'command-o
 let scrElem = document.querySelector('.title');
 
 function toggleSettingsPanel() {
+    const serverPanel = document.getElementById('server-panel');
+    if (serverPanel.style.display === 'flex') {
+        toggleServerPanel();
+        return;
+    }
     const panel = document.getElementById('settings-panel');
     panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
     if (panel.style.display === 'flex') {
@@ -859,13 +864,13 @@ document.addEventListener('keydown', function(event) {
         }
         return;
     }
-    if (document.getElementById('settings-panel').style.display == 'flex' || 
-        document.getElementById('server-panel').style.display == 'flex') {
-        return;
-    }
-    if (event.key === '`') {
+    if (event.key === '`') { // Do not move down
         event.preventDefault();
         toggleSettingsPanel();
+        return;
+    }
+    if (document.getElementById('settings-panel').style.display == 'flex' || 
+        document.getElementById('server-panel').style.display == 'flex') {
         return;
     }
     if (event.key === ' ' && textInput !== document.activeElement && timer.enabled) {
@@ -873,10 +878,9 @@ document.addEventListener('keydown', function(event) {
         timer.startLongPress();
         return;
     }
-    if (event.key.length === 1 && event.key[0] >= '0' && event.key[0] <= '9' && textInput !== document.activeElement) {
+    if (event.key.length === 1 && event.key[0] >= '1' && event.key[0] <= '9' && textInput !== document.activeElement) {
         event.preventDefault();
-        let idx = parseInt(event.key, 10);
-        if (idx == 0) { idx = 10; }
+        let idx = parseInt(event.key);
         if (idx < buttonRow.buttonRow.children.length) {
             let button = buttonRow.buttonRow.children[idx - 1];
             if (button.classList.contains('toggle-btn')) {
@@ -954,7 +958,7 @@ document.addEventListener('keydown', function(event) {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    server.loadData();
+    server.loadData(); // No need to wait for now
     newScramble();
 });
 
