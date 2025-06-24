@@ -94,17 +94,29 @@
             box-shadow: 0 0 12px rgba(0, 180, 255, 0.5);
             color: var(--white);
         }
-        .toggle-btn.scelto::after {
+        .toggle-btn.subset-mark::after {
             content: '';
             position: absolute;
             top: 0px;
             right: 0px;
             width: 0;
             height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid var(--accent-tertiary);
-            border-bottom: 8px solid transparent;
-            border-top: 8px solid var(--accent-tertiary);
+            border-left: 4px solid transparent;
+            border-right: 4px solid var(--accent-tertiary);
+            border-bottom: 4px solid transparent;
+            border-top: 4px solid var(--accent-tertiary);
+        }
+        .toggle-btn.non-zero-mark::after {
+            content: '';
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid var(--success);
+            border-right: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            border-top: 4px solid var(--success);
         }
         .hover-text {
             position: absolute;
@@ -311,7 +323,7 @@
                 <input type="checkbox" id="timer-ckbx" checked onchange="saveSettings()" />
             </div>
             <div class="setting">
-                <label>Mark +4</label>
+                <label>Subset Training</label>
                 <input type="checkbox" id="mm-ckbx" checked onchange="saveSettings()" />
             </div>
             <div class="setting">
@@ -352,7 +364,7 @@
     </div>
     <div class="bottom">
         <div class="command-input">
-            <input type="text" id="command-input" placeholder="Enter command...">
+            <input type="text" id="command-input" placeholder="Enter command..." autocomplete="off">
         </div>
         <div class="text-output">
             <div id="command-output">Command output...</div>
@@ -1019,6 +1031,7 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Tab') {
         event.preventDefault();
         markTimesAndUpdateScramble();
+        textInput.blur();
         return;
     }
     if (textInput !== document.activeElement) {
@@ -1034,7 +1047,7 @@ document.addEventListener('keydown', function(event) {
         lastCmd = textInput.value.trim();
         let cmd = lastCmd.split(' ');
         textInput.value = '';
-        svg.focus();
+        textInput.blur();
         if (cmd.length == 0) return;
         if (cmd[0][0] == '.') {
             let key = cmd[0].substring(1);
@@ -1110,8 +1123,13 @@ function _genButton(text) {
         button.onclick = function() { this.classList.toggle('active'); };
         button.addEventListener('mouseover', _showHoverText);
         button.addEventListener('mouseout', _hideHoverText);
-        if (stats[text] && stats[text].more > 0) {
-            button.classList.add('scelto');
+        if (stats[text]) {
+            if (stats[text].mark > 0) {
+                button.classList.add('non-zero-mark');
+            }
+            if (stats[text].more > 0) {
+                button.classList.add('subset-mark');
+            }
         }
     }
     return button;
