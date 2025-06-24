@@ -329,7 +329,6 @@ class Cube3 {
     doCongrates() {
         const numToLearn = Object.keys(this.stats).filter(key => this.isNonPro(key) && this.stats[key].times == 0).length;
         if (numToLearn == 0 && !congrated) {
-            // alert('Congratulations, you have learned all 818 algs!');
             congrated = true;
             localStorage.setItem('bld.congrates', '1');
             return true;

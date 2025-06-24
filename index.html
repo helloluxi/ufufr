@@ -841,6 +841,9 @@ function newScramble() {
     drawCube.updatePieceColors(s.cube);
     document.querySelector('.title').innerText = s.scr;
     buttonRow.resetButtons();
+    if (cube3.doCongrates()) {
+        alert('Congratulations, you have learned all 818 algs!');
+    }
 }
 
 // Command Input
