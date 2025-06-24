@@ -400,7 +400,7 @@
         <button id="back-button" onclick="toggleServerPanel()">Close</button>
     </div>
 
-<!-- <script>
+<script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
@@ -412,7 +412,7 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-</script> -->
+</script>
 <script src="min2phase.js"></script>
 <script src="cube3.js"></script>
 <script>
@@ -531,17 +531,14 @@ class Server {
                 savedItem = text;
                 localStorage.setItem(`bld.${key}`, text);
                 func(savedItem);
-                console.log(`[Server] ${key}`);
             }).catch(err => {
                 if (!savedItem) {
                     savedItem = localStorage.getItem(`bld.${key}`);
                     func(savedItem);
-                    console.log(`[Local] ${key}`);
                 }
             });
         } else if (savedItem) {
             func(savedItem);
-            console.log(`[Local] ${key}`);
         }
     }
     
@@ -862,12 +859,13 @@ document.addEventListener('keydown', function(event) {
         }
         return;
     }
-    if (event.key === '`') {
-        toggleSettingsPanel();
-        return;
-    }
     if (document.getElementById('settings-panel').style.display == 'flex' || 
         document.getElementById('server-panel').style.display == 'flex') {
+        return;
+    }
+    if (event.key === '`') {
+        event.preventDefault();
+        toggleSettingsPanel();
         return;
     }
     if (event.key === ' ' && textInput !== document.activeElement && timer.enabled) {
@@ -928,26 +926,29 @@ document.addEventListener('keydown', function(event) {
             cube3.removeMark(keys);
             print(`Remove marks: ${cube3.keysToPush.map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
             server.saveStats();
-        } else if (cmd === 'alg') {
-            const randKey = cube3.markedAlgKeys[Math.floor(Math.random() * cube3.markedAlgKeys.length)];
-            print(`${randKey}: ${cube3.algs[randKey]}`);
-        } else if (cmd === 'cp') {
-            const lastSolveInfo = `${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`;
-            navigator.clipboard.writeText(lastSolveInfo).then(() => {
-                print(`Copied: ${timer.finalTimeStr} ... @${timer.nowTimeStr}`);
-            }).catch(err => {
-                print('Failed to copy: ' + err);
-            });
-        } else if (cmd === 'top') {
-            const numTop = 10;
-            let topKeys = Object.keys(cube3.stats).filter(key => cube3.isNonPro(key))
-                .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
-            print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
-        } else if (cmd === 'ud') {
-            server.loadData(true);
-            forceUpdate();
         } else {
-            print(`Unknown command: ${cmd}. Usage: .key, ./+/-/alg/cp/top/ud`);
+            cmd = cmd.toLowerCase();
+            if (cmd === 'alg') {
+                const randKey = cube3.markedAlgKeys[Math.floor(Math.random() * cube3.markedAlgKeys.length)];
+                print(`${randKey}: ${cube3.algs[randKey]}`);
+            } else if (cmd === 'cp') {
+                const lastSolveInfo = `${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`;
+                navigator.clipboard.writeText(lastSolveInfo).then(() => {
+                    print(`Copied: ${timer.finalTimeStr} ... @${timer.nowTimeStr}`);
+                }).catch(err => {
+                    print('Failed to copy: ' + err);
+                });
+            } else if (cmd === 'top') {
+                const numTop = 10;
+                let topKeys = Object.keys(cube3.stats).filter(key => cube3.isNonPro(key))
+                    .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
+                print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
+            } else if (cmd === 'ud') {
+                server.loadData(true);
+                forceUpdate();
+            } else {
+                print(`Unknown command: ${cmd}. Usage: ./+/-/alg/cp/top/ud`);
+            }
         }
     }
 });
