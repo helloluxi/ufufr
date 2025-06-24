@@ -17,7 +17,9 @@
             --border-secondary: #555;
             --accent-primary: #41aaff;
             --accent-secondary: #0088cc;
-            --accent-tertiary: #0022ff;
+            --accent-blue: #0022ff;
+            --accent-orange: #ff8800;
+            --accent-green: #00ff00;
             --accent-hover: #33ccff;
             --success: #4CAF50;
             --white: #fff;
@@ -94,6 +96,18 @@
             box-shadow: 0 0 12px rgba(0, 180, 255, 0.5);
             color: var(--white);
         }
+        .toggle-btn.new-mark::after {
+            content: '';
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid var(--accent-orange);
+            border-bottom: 4px solid transparent;
+            border-top: 4px solid var(--accent-orange);
+        }
         .toggle-btn.subset-mark::after {
             content: '';
             position: absolute;
@@ -102,9 +116,9 @@
             width: 0;
             height: 0;
             border-left: 4px solid transparent;
-            border-right: 4px solid var(--accent-tertiary);
+            border-right: 4px solid var(--accent-blue);
             border-bottom: 4px solid transparent;
-            border-top: 4px solid var(--accent-tertiary);
+            border-top: 4px solid var(--accent-blue);
         }
         .toggle-btn.non-zero-mark::after {
             content: '';
@@ -113,10 +127,10 @@
             left: 0px;
             width: 0;
             height: 0;
-            border-left: 4px solid var(--success);
+            border-left: 4px solid var(--accent-green);
             border-right: 4px solid transparent;
             border-bottom: 4px solid transparent;
-            border-top: 4px solid var(--success);
+            border-top: 4px solid var(--accent-green);
         }
         .hover-text {
             position: absolute;
@@ -386,7 +400,7 @@
         <button id="back-button" onclick="toggleServerPanel()">Close</button>
     </div>
 
-<script>
+<!-- <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
@@ -398,95 +412,10 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-</script>
+</script> -->
 <script src="min2phase.js"></script>
+<script src="cube3.js"></script>
 <script>
-
-function forceUpdate() {
-    if (navigator.serviceWorker.controller){
-        navigator.serviceWorker.controller.postMessage('ud');
-    } else if (print) {
-        print('Service worker not ready.');
-    }
-    setTimeout(() => {
-        location.reload();
-    }, 1000);
-}
-
-const colorMapping = {
-    'd': '#FFFFFF', // White
-    'u': '#FFFF00', // Yellow
-    'f': '#FF0000', // Red
-    'b': '#FFA500', // Orange
-    'l': '#0000FF', // Blue
-    'r': '#00FF00'  // Green
-};
-
-const size = 40;
-const faceSize = 3 * size + 10;
-
-const svgNS = "http://www.w3.org/2000/svg";
-const svg = document.createElementNS(svgNS, "svg");
-svg.setAttribute("width", faceSize * 4);
-svg.setAttribute("height", faceSize * 3);
-svg.setAttribute("viewBox", `0 0 ${faceSize * 4} ${faceSize * 3}`);
-
-const pieces = [];
-function drawFace(xx, yy) {
-    startX = xx * faceSize;
-    startY = yy * faceSize;
-    for (let i = 0; i < 9; i++) {
-        const x = startX + (i % 3) * size;
-        const y = startY + Math.floor(i / 3) * size;
-
-        const rect = document.createElementNS(svgNS, "rect");
-        rect.setAttribute("x", x);
-        rect.setAttribute("y", y);
-        rect.setAttribute("width", size);
-        rect.setAttribute("height", size);
-        rect.setAttribute("stroke", "#000000");
-
-        pieces.push(rect);
-        svg.appendChild(rect);
-    }
-}
-drawFace(1, 0);
-drawFace(2, 1);
-drawFace(1, 1);
-drawFace(1, 2);
-drawFace(0, 1);
-drawFace(3, 1);
-
-document.getElementById('rubiksCubeContainer').appendChild(svg);
-
-function updatePieceColors(str) {
-    for (let i = 0; i < str.length; i++) {
-        pieces[i].setAttribute("fill", colorMapping[str[i]]);
-    }
-}
-
-function resizeCanvas() {
-    let s = Math.min(window.innerWidth / 4 - 20, faceSize) / faceSize;
-    svg.style.transform = `scale(${s})`;            
-}
-
-window.addEventListener('resize', resizeCanvas);
-window.addEventListener('load', resizeCanvas);
-
-const edgeIdxOnCube = [7, 19, 3, 37, 1, 46, 5, 10, 28, 25, 30, 43, 34, 52, 32, 16, 23, 12, 21, 41, 50, 39, 48, 14],
-    cornIdxOnCube = [8, 9, 20, 6, 18, 38, 0, 36, 47, 2, 45, 11, 27, 44, 24, 33, 53, 42, 35, 17, 51, 29, 26, 15],
-    edgeCode = 'ABCDEFGHIJKLMNOPQRSTWXYZ', cornCode = 'ahqcbtedwgfzilsknxmpyojr';
-const edgeIdx = {}, cornIdx = {}, fullIdx = {};
-for (let i = 0; i < 24; i++) {
-    fullIdx[edgeCode[i]] = edgeIdx[edgeCode[i]] = i>>1;
-    fullIdx[cornCode[i]] = (cornIdx[cornCode[i]] = (i/3)|0) + 12;
-}
-
-function swap(arr, i, j){
-    let temp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = temp;
-}
 
 function print(str){
     document.querySelector('.text-output div').innerText = str;
@@ -496,110 +425,389 @@ function printAdd(str){
     document.querySelector('.text-output div').innerText += str;
 }
 
-function isUpperCase(c){
-    return c >= 'A' && c <= 'Z';
+function forceUpdate() {
+    if (navigator.serviceWorker.controller){
+        navigator.serviceWorker.controller.postMessage('ud');
+    } else {
+        print('Service worker not ready.');
+    }
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
 }
 
-function cycleCube(cubeArr, code){
-    if (isUpperCase(code)) {
-        let i = edgeCode.indexOf(code);
-        swap(cubeArr, edgeIdxOnCube[0], edgeIdxOnCube[i]);
-        swap(cubeArr, edgeIdxOnCube[1], edgeIdxOnCube[i^1]);
-    } else if (code > 'a' && code <= 'z') {
-        let i = cornCode.indexOf(code);
-        swap(cubeArr, cornIdxOnCube[0], cornIdxOnCube[i]);
-        swap(cubeArr, cornIdxOnCube[1], cornIdxOnCube[((i/3)|0)*3+(i+1)%3]);
-        swap(cubeArr, cornIdxOnCube[2], cornIdxOnCube[((i/3)|0)*3+(i+2)%3]);
-    } else if (code > '0' && code < '6') {
-        let i = parseInt(code);
-        swap(cubeArr, 4+9*buffer, 4+9*i);
+// DrawCube class for handling cube visualization
+class DrawCube {
+    constructor(containerId) {
+        this.colorMapping = {
+            'd': '#FFFFFF', // White
+            'u': '#FFFF00', // Yellow
+            'f': '#FF0000', // Red
+            'b': '#FFA500', // Orange
+            'l': '#0000FF', // Blue
+            'r': '#00FF00'  // Green
+        };
+        
+        this.size = 40;
+        this.faceSize = 3 * this.size + 10;
+        this.svgNS = "http://www.w3.org/2000/svg";
+        this.pieces = [];
+        
+        this.initializeCube(containerId);
+        this.setupEventListeners();
+    }
+    
+    initializeCube(containerId) {
+        this.svg = document.createElementNS(this.svgNS, "svg");
+        this.svg.setAttribute("width", this.faceSize * 4);
+        this.svg.setAttribute("height", this.faceSize * 3);
+        this.svg.setAttribute("viewBox", `0 0 ${this.faceSize * 4} ${this.faceSize * 3}`);
+        
+        // Draw all faces
+        this.drawFace(1, 0); // Top
+        this.drawFace(2, 1); // Right
+        this.drawFace(1, 1); // Front
+        this.drawFace(1, 2); // Bottom
+        this.drawFace(0, 1); // Left
+        this.drawFace(3, 1); // Back
+        
+        document.getElementById(containerId).appendChild(this.svg);
+    }
+    
+    drawFace(xx, yy) {
+        const startX = xx * this.faceSize;
+        const startY = yy * this.faceSize;
+        
+        for (let i = 0; i < 9; i++) {
+            const x = startX + (i % 3) * this.size;
+            const y = startY + Math.floor(i / 3) * this.size;
+
+            const rect = document.createElementNS(this.svgNS, "rect");
+            rect.setAttribute("x", x);
+            rect.setAttribute("y", y);
+            rect.setAttribute("width", this.size);
+            rect.setAttribute("height", this.size);
+            rect.setAttribute("stroke", "#000000");
+
+            this.pieces.push(rect);
+            this.svg.appendChild(rect);
+        }
+    }
+    
+    updatePieceColors(str) {
+        for (let i = 0; i < str.length; i++) {
+            this.pieces[i].setAttribute("fill", this.colorMapping[str[i]]);
+        }
+    }
+    
+    resizeCanvas() {
+        let s = Math.min(window.innerWidth / 4 - 20, this.faceSize) / this.faceSize;
+        this.svg.style.transform = `scale(${s})`;
+    }
+    
+    setupEventListeners() {
+        window.addEventListener('resize', () => this.resizeCanvas());
+        window.addEventListener('load', () => this.resizeCanvas());
     }
 }
 
-function invCycleCube(cube, bfCode){
-    let cubeArr = cube.split('');
-    bfCode.split('').reverse().forEach(c => {
-        cycleCube(cubeArr, c);
-    });
-    return cubeArr.join('');
-}
-
-function genCube(bfCode){
-    let cubeArr = 'uuuuuuuuurrrrrrrrrfffffffffdddddddddlllllllllbbbbbbbbb'.split('');
-    for (let bfCodeIdx = bfCode.length - 1; bfCodeIdx >= 0; bfCodeIdx--) {
-        let c = bfCode[bfCodeIdx];
-        if (c == '+' || c == '-') {
-            const c1 = bfCode[--bfCodeIdx];
-            if (isUpperCase(c1)) {
-                cycleCube(cubeArr, edgeCode[edgeIdx[c1]*2+1]);
-                cycleCube(cubeArr, c1);
-            } else if (c == '+') {
-                cycleCube(cubeArr, cornCode[cornIdx[c1]*3+1]);
-                cycleCube(cubeArr, c1);
-            } else {
-            cycleCube(cubeArr, cornCode[cornIdx[c1]*3+2]);
-            cycleCube(cubeArr, c1);
+// Server class for handling server interactions
+class Server {
+    constructor() {
+        this.serverUrl = localStorage.getItem('bld.serverUrl') || '';
+        this.serverPassword = localStorage.getItem('bld.serverPswd') || '';
+        this.noPush = localStorage.getItem('bld.noPush') === 'true';
+    }
+    
+    getItem(key, func, forceServer = false) {
+        let savedItem;
+        if (!forceServer) {
+            savedItem = localStorage.getItem(`bld.${key}`);
+        }
+        if (this.serverUrl && (!savedItem || forceServer)) {
+            fetch(`${this.serverUrl}/${key}`)
+            .then(response => response.text())
+            .then(text => {
+                savedItem = text;
+                localStorage.setItem(`bld.${key}`, text);
+                func(savedItem);
+                console.log(`[Server] ${key}`);
+            }).catch(err => {
+                if (!savedItem) {
+                    savedItem = localStorage.getItem(`bld.${key}`);
+                    func(savedItem);
+                    console.log(`[Local] ${key}`);
+                }
+            });
+        } else if (savedItem) {
+            func(savedItem);
+            console.log(`[Local] ${key}`);
+        }
+    }
+    
+    pushStats(text) {
+        if (!self.serverUrl || self.noPush) return;
+        fetch(`${self.serverUrl}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                text: text,
+                pswd: self.serverPassword
+            })
+        }).then(response => {
+            if (!response.ok) {
+                print(`Failed to push: ${response.status} ${response.statusText}`);
             }
-        } else{
-            cycleCube(cubeArr, c);
+        }).catch(err => {
+            print(`Error pushing stats: ${err}`);
+        });
+    }
+    
+    loadData(forceServer = false) {
+        if (!this.serverUrl) {
+            print('No server.');
         }
+        this.getItem('alg', text => cube3.updateAlg(text), forceServer);
+        this.getItem('mem', text => cube3.updateMem(text), forceServer);
+        this.getItem('stats', text => cube3.updateStats(text), forceServer);
     }
-    return cubeArr.join('');
-}
-
-// Blank Stats
-let stats = {}, mm = localStorage.getItem('bld.moreMark') == 'true' ? 4 : 0;
-function initStat(key, cat) {
-    stats[key] = {times: 0, mark: 0, more: Math.random()<0.04?mm:0, cat: cat};
-}
-for (let c1 of edgeCode.slice(2)) {
-    for (let c2 of edgeCode.slice(2)) {
-        if (edgeIdx[c1] != edgeIdx[c2]) {
-            initStat(c1 + c2, 'e');
-        }
-    }
-    for (let c2 of cornCode.slice(3)) {
-        initStat(c1 + c2, 'par');
-    }
-    if (edgeCode[edgeIdx[c1]*2] == c1){
-        initStat(c1 + '+', 'e+');
-    }
-}
-for (let c1 of cornCode.slice(3)) {
-    for (let c2 of cornCode.slice(3)) {
-        if (cornIdx[c1] != cornIdx[c2]) {
-            initStat(c1 + c2, 'c');
-        }
-    }
-}
-for (let cIdx1 = 3; cIdx1 < 24; cIdx1 += 3) {
-    const c1 = cornCode[cIdx1];
-    initStat(`${c1}+`, 'c+');
-    initStat(`${c1}-`, 'c+');
-    for (let cIdx2 = cIdx1 + 3; cIdx2 < 24; cIdx2 += 3) {
-        const c2 = cornCode[cIdx2];
-        initStat(`${c1}+${c2}+`, 'c++');
-        initStat(`${c1}-${c2}-`, 'c++');
+    
+    saveStats() {
+        this.pushStats(cube3.keysToPush.map(x => 
+            `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
+        ).join('\n'));
+        cube3.clearKeysToPush();
+        localStorage.setItem('bld.stats', Object.keys(cube3.stats).map(x =>
+            `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
+        ).join('\n'));
     }
 }
 
-// Server
-let serverUrl = localStorage.getItem('bld.serverUrl') || '', serverPassword = localStorage.getItem('bld.serverPswd') || '', noPush = localStorage.getItem('bld.noPush') === 'true';
+// ButtonRow class for handling button interactions
+class ButtonRow {
+    constructor(containerSelector) {
+        this.buttonRow = document.querySelector(containerSelector);
+        this.nextButtonHtml = '<button id="nextButton" onclick="onClickNext()">Next &rarr;</button>';
+    }
+    
+    showHoverText(event) {
+        const hoverText = document.createElement('div');
+        hoverText.className = 'hover-text';
+        hoverText.innerHTML = cube3.getAlgInfo(event.target.textContent).join('<br>');
+        event.target.appendChild(hoverText);
+    }
+    
+    hideHoverText(event) {
+        const hoverText = event.target.querySelector('.hover-text');
+        if (hoverText) {
+            event.target.removeChild(hoverText);
+        }
+    }
+    
+    generateButton(text) {
+        const button = document.createElement('button');
+        button.textContent = text;
+        button.className = 'toggle-btn';
+        
+        if (cube3.stats[text]) {
+            button.onclick = function() { this.classList.toggle('active'); };
+            button.addEventListener('mouseover', (e) => this.showHoverText(e));
+            button.addEventListener('mouseout', (e) => this.hideHoverText(e));
+            
+            if (cube3.stats[text].mark > 0) {
+                button.classList.add('non-zero-mark');
+            }
+            if (cube3.stats[text].times == 0) {
+                button.classList.add('new-mark');
+            } else if (cube3.stats[text].more > 0) {
+                button.classList.add('subset-mark');
+            }
+        }
+        return button;
+    }
+    
+    resetButtons() {
+        this.buttonRow.innerHTML = '';
+        cube3.ecCode.forEach(code => this.buttonRow.appendChild(this.generateButton(code)));
+        this.buttonRow.appendChild(document.createElement('button')).outerHTML = this.nextButtonHtml;
+    }
+}
+
+// Timer class for handling timing functionality
+class Timer {
+    constructor(canvasId, timerContainerId, timerDisplayId, commandOutputId) {
+        this.enabled = localStorage.getItem('bld.timer') !== 'false';
+        this.canvas = document.getElementById(canvasId);
+        this.timerContainer = document.getElementById(timerContainerId);
+        this.timerDisplay = document.getElementById(timerDisplayId);
+        this.commandOutput = document.getElementById(commandOutputId);
+        this.timerInterval = null;
+        this.startTime = null;
+        this.longPressTimer = null;
+        this.isTimerRunning = false;
+        this.pressStarted = false;
+        this.finalTimeStr = '*';
+        this.nowTimeStr = '*';
+        
+        this.setupEventListeners();
+    }
+
+    setEnabled(enabled) {
+        this.enabled = enabled;
+        localStorage.setItem('bld.timer', enabled);
+    }
+    
+    formatTime(time) {
+        const seconds = (time / 1000) | 0;
+        const milliseconds = ((time % 1000) / 10) | 0;
+        return `${seconds}.${milliseconds.toString().padStart(2, '0')}`;
+    }
+    
+    startTimer() {
+        if (!timer.enabled) return;
+        this.isTimerRunning = true;
+        this.startTime = new Date().getTime();
+        this.timerInterval = setInterval(() => {
+            const currentTime = new Date().getTime() - this.startTime;
+            this.timerDisplay.textContent = this.formatTime(currentTime);
+        }, 37);
+    }
+    
+    stopTimer() {
+        if (this.isTimerRunning) {
+            const now = new Date();
+            const finalTime = now.getTime() - this.startTime;
+            if (finalTime < 200) return;
+            clearInterval(this.timerInterval);
+            this.finalTimeStr = this.formatTime(finalTime);
+            this.nowTimeStr = now.toLocaleString('sv-SE').replace('T', ' ');
+            this.commandOutput.textContent = `Time: ${this.finalTimeStr}`;
+            this.isTimerRunning = false;
+        }
+        this.timerContainer.style.display = 'none';
+    }
+    
+    prepareTimer() {
+        if (!timer.enabled) return;
+        this.timerContainer.style.display = 'flex';
+        this.timerDisplay.textContent = '0.00';
+    }
+    
+    startLongPress() {
+        if (!timer.enabled) return false;
+        this.pressStarted = true;
+        this.longPressTimer = setTimeout(() => {
+            this.prepareTimer();
+        }, 500);
+        return true;
+    }
+    
+    endPress() {
+        if (this.pressStarted) {
+            clearTimeout(this.longPressTimer);
+            if (this.timerContainer.style.display === 'flex' && !this.isTimerRunning) {
+                this.startTimer();
+            }
+            this.pressStarted = false;
+        }
+    }
+    
+    handleBlur() {
+        if (this.pressStarted) {
+            clearTimeout(this.longPressTimer);
+            this.pressStarted = false;
+            this.stopTimer();
+        }
+    }
+    
+    setupEventListeners() {
+        this.canvas.addEventListener('mousedown', () => this.startLongPress());
+        document.addEventListener('mouseup', () => this.endPress());
+        this.canvas.addEventListener('touchstart', () => this.startLongPress());
+        document.addEventListener('touchend', () => this.endPress());
+        document.addEventListener('touchcancel', () => this.handleBlur());
+        this.timerContainer.addEventListener('mousedown', () => this.stopTimer());
+        this.timerContainer.addEventListener('touchstart', () => this.stopTimer());
+        window.addEventListener('blur', () => this.handleBlur());
+          document.addEventListener('keyup', (e) => {
+            if (e.key === ' ' && textInput !== document.activeElement && timer.enabled && !this.isTimerRunning) {
+                this.endPress();
+            }
+        });
+    }
+}
+
+const cube3 = new Cube3();
+const drawCube = new DrawCube('rubiksCubeContainer');
+const server = new Server();
+const buttonRow = new ButtonRow('.button-row');
+const timer = new Timer('canvas', 'timer-container', 'timer-display', 'command-output');
+let scrElem = document.querySelector('.title');
+
+function toggleSettingsPanel() {
+    const panel = document.getElementById('settings-panel');
+    panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+    if (panel.style.display === 'flex') {
+        document.getElementById('mode-select').value = cube3.mode;
+        document.getElementById('parity-ckbx').checked = cube3.usePar;
+        document.getElementById('mm-ckbx').checked = cube3.mm > 0;
+        document.getElementById('ft-slider').value = cube3.ftWeight;
+        document.getElementById('ft2-slider').value = cube3.ft2Weight;
+        document.getElementById('fl-slider').value = cube3.flWeight;
+        document.getElementById('lr-slider').value = cube3.learningRate;
+        document.getElementById('ff-slider').value = cube3.falloff;
+        document.getElementById('ft-value').innerText = cube3.ftWeight;
+        document.getElementById('ft2-value').innerText = cube3.ft2Weight;
+        document.getElementById('fl-value').innerText = cube3.flWeight;
+        document.getElementById('lr-value').innerText = cube3.learningRate;
+        document.getElementById('ff-value').innerText = cube3.falloff;
+        document.getElementById('timer-ckbx').checked = timer.enabled;
+        
+        let filtered = Object.keys(cube3.stats).filter(key => cube3.isNonPro(key) && cube3.stats[key].times > 0);
+        let progress = filtered.length;
+        let totalTimes = filtered.reduce((acc, key) => acc + cube3.stats[key].times, 0);
+        let totalMarks = filtered.reduce((acc, key) => acc + cube3.stats[key].mark, 0);
+        document.getElementById('tiny-line').innerText = `Progress=${progress}/818 (${(100 * progress / 818).toFixed(2)}%)
+            Avg Times=${(totalTimes / progress).toFixed(2)}
+            Avg Marks=${(totalMarks / progress).toFixed(2)}`;
+    }
+}
+
+function saveSettings(genScr=false) {
+    timer.setEnabled(document.getElementById('timer-ckbx').checked);
+    const newSettings = {
+        mode: document.getElementById('mode-select').value,
+        usePar: document.getElementById('parity-ckbx').checked,
+        mm: document.getElementById('mm-ckbx').checked ? 4 : 0,
+        ftWeight: parseFloat(document.getElementById('ft-slider').value),
+        ft2Weight: parseFloat(document.getElementById('ft2-slider').value),
+        flWeight: parseFloat(document.getElementById('fl-slider').value),
+        learningRate: parseFloat(document.getElementById('lr-slider').value),
+        falloff: parseFloat(document.getElementById('ff-slider').value)
+    };
+    cube3.updateSettings(newSettings);
+    if (genScr) newScramble();
+}
+
+
 function saveServerSettings() {
     let _serverUrl = document.getElementById('server-url').value;
     let _serverPassword = document.getElementById('server-password').value;
-    noPush = document.getElementById('no-push').checked;
+    server.noPush = document.getElementById('no-push').checked;
     if (!_serverUrl) return;
-    serverUrl = _serverUrl;
-    serverPassword = _serverPassword;
-    localStorage.setItem('bld.serverUrl', serverUrl);
-    localStorage.setItem('bld.serverPswd', serverPassword);
-    localStorage.setItem('bld.noPush', noPush);
-    getServer(true);
+    
+    server.serverUrl = _serverUrl;
+    server.serverPassword = _serverPassword;
+    localStorage.setItem('bld.serverUrl', server.serverUrl);
+    localStorage.setItem('bld.serverPswd', server.serverPassword);
+    localStorage.setItem('bld.noPush', server.noPush);
+    server.loadData(true);
     toggleServerPanel();
     forceUpdate();
 }
-
+    
 function toggleServerPanel() {
     if (document.getElementById('server-panel').style.display == 'flex') {
         document.getElementById('server-panel').style.display = 'none';
@@ -609,398 +817,37 @@ function toggleServerPanel() {
         const serverPanel = document.getElementById('server-panel');
         serverPanel.style.display = 'flex';
         
-        document.getElementById('server-url').value = serverUrl;
-        document.getElementById('server-password').value = serverPassword;
-        document.getElementById('no-push').checked = noPush;
+        document.getElementById('server-url').value = server.serverUrl;
+        document.getElementById('server-password').value = server.serverPassword;
+        document.getElementById('no-push').checked = server.noPush;
     }
 }
 
-// Mem & Mark
-let algs = {};
-let ecCode = [];
-let learningRate = parseFloat(localStorage.getItem('bld.learningRate')) || 0.1;
-let falloff = parseFloat(localStorage.getItem('bld.falloff')) || 1;
-let timerEnabled = localStorage.getItem('bld.timer') != 'false';
-let mode = localStorage.getItem('bld.mode') || 'rc';
-let codeDict = {};
-let markedAlgKeys = [];
-function updateAlg(text) {
-    text.split(/\r?\n/).forEach(line => {
-        let eqIdx = line.indexOf('=');
-        let key = line.substring(0, eqIdx).trim();
-        let alg = line.substring(eqIdx+1).trim();
-        algs[key] = alg;
-        if (alg.endsWith('!')) markedAlgKeys.push(key);
-    });
-}
-function updateMem(text) {
-    text.split(/\r?\n/).forEach(line => {
-        let eqIdx = line.indexOf('=');
-        let key = line.substring(0, eqIdx).trim();
-        codeDict[key] = line.substring(eqIdx+1).trim();
-    });
-}
-function updateStats(text) {
-    text.split(/\r?\n/).forEach(item => {
-        if (item.trim().length == 0) return;
-        try{
-            const [key, value] = item.split('=');
-            const [times, mark] = value.split(',').map(Number);
-            if (Number.isInteger(times) && times >= 0 && Number.isInteger(mark) && mark >= 0) {
-                [stats[key].times, stats[key].mark] = [times, mark];
-            }
-        } catch (e) {
-            console.error(`Error parsing stats line: ${item}`, e);
-        }
-    });
-}
-function getItem(key, func, forceServer=false) {
-    let savedItem;
-    if (!forceServer) {
-        savedItem = localStorage.getItem(`bld.${key}`);
-    }
-    if (serverUrl && (!savedItem || forceServer)) {
-        fetch(`${serverUrl}/${key}`)
-        .then(response => response.text())
-        .then(text => {
-            savedItem = text;
-            localStorage.setItem(`bld.${key}`, text);
-            func(savedItem);
-            console.log(`[Server] ${key}`);
-        }).catch(err => {
-            if (!savedItem) {
-                savedItem = localStorage.getItem(`bld.${key}`);
-                func(savedItem);
-                console.log(`[Local] ${key}`);
-            }
-        });
-    } else if (savedItem) {
-        func(savedItem);
-        console.log(`[Local] ${key}`);
-    }
-}
-function getServer(forceServer=false) {
-    if (!serverUrl){
-        print('No server.');
-    }
-    getItem('alg', updateAlg, forceServer);
-    getItem('mem', updateMem, forceServer);
-    getItem('stats', updateStats, forceServer);
-}
-
-function isNonPro(key){
-    return stats[key].cat == 'e' || stats[key].cat == 'c';
-}
-
-function sampleDict(dict, rd){
-    for (let key in dict) {
-        rd -= dict[key];
-        if (rd < 0) {
-            return key;
-        }
-    }
-}
-
-function getWeight(stat){
-    return stat.times == 0 ? learningRate : Math.pow(stat.times, -2 / (1 + (stat.mark + stat.more) * falloff));
-}
-
-let occupied, usePar = localStorage.getItem('bld.par') != 'false', ft2Weight = localStorage.getItem('bld.ft2Weight') || 0, ftWeight = localStorage.getItem('bld.ftWeight') || 0, flWeight = localStorage.getItem('bld.flWeight') || 0;
-function genCode(cat, maxCount, code){
-    if (cat.endsWith('3')){
-        let indices = [], ocStart = cat[0] == 'e' ? 0 : 12, ocCount = cat[0] == 'e' ? 12 : 8, gap = cat[0] == 'e' ? 2 : 3;
-        let idxPool = [...Array(ocCount).keys()].filter(ocIdx => !occupied[ocIdx + ocStart]);
-        for (let idx = 0; idx < 3; idx++) {
-            let poolIdx = Math.random() * idxPool.length | 0;
-            indices.push(idxPool[poolIdx]);
-            occupied[idxPool[poolIdx] + ocStart] = true;
-            idxPool.splice(poolIdx, 1);
-        }
-        indices.sort((a, b) => a - b);
-        let codePool = cat[0] == 'e' ? edgeCode : cornCode;
-        const codes = [codePool[indices[0]*gap], codePool[indices[1]*gap+(Math.random()*gap|0)], codePool[indices[2]*gap+(Math.random()*gap|0)]];
-        code.push(`${codes[0]}${codes[1]}${codes[2]}${codes[0]}`);
-    }
-    else{
-        let weights = {};
-        let tmpAlgs = [];
-        let sumWeight = 0.0;
-        for (let key in stats) {
-            if (stats[key].cat == cat){
-                sumWeight += weights[key] = getWeight(stats[key]);
-            }
-        }
-        for (let i = 0; i < maxCount; i++) {
-            let keysToDel = Object.keys(weights).filter(key => key.split('').some(k => fullIdx[k] !== undefined && occupied[fullIdx[k]]));
-            keysToDel.forEach(key => {
-                sumWeight -= weights[key];
-                delete weights[key];
-            });
-            if (Object.keys(weights).length == 0) break;
-            let key = sampleDict(weights, Math.random() * sumWeight);
-            tmpAlgs.push(key);
-            key.split('').forEach(k => fullIdx[k] !== undefined && (occupied[fullIdx[k]] = true));
-        }
-        for (let i = 0; i < tmpAlgs.length; i++) {
-            let j = Math.floor(Math.random() * (tmpAlgs.length - i));
-            code.push(tmpAlgs[j]);
-            tmpAlgs[j] = tmpAlgs[tmpAlgs.length - i - 1];
-        }
-    }
-}
-
-const eFaces = ['uf', 'ul', 'ub', 'ur', 'df', 'dl', 'db', 'dr', 'fr', 'fl', 'bl', 'br'];
-let randPermParity = 0;
-function randPerm(n) {
-    randPermParity = 0;
-    let arr = Array.from({length: n}, (_, i) => i);
-    for (let i = n - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        if (i != j){
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-            randPermParity ^= 1;
-        }
-    }
-    return arr;
-}
-
-const bfSuffix1 = ['', ' Rw', ' Rw2', ' Rw\'', ' Fw', ' Fw\''], bfSuffix2 = ['', ' Uw', ' Uw2', ' Uw\''];
-const sufCode1 = ['', 'JMFGQOYGjmf235', 'MFJFGOGYQYmfjf3252', 'FMJGYOQGfmj532', 'TIRGDKPGtir431', 'RITGPKDGrit134'],
-    sufCode2 = ['', 'GECQZWTQgec15421', 'EGCGQWQZTZegcg141252', 'CEGQTWZQceg12451'];
-const wcaOriMap = { 'u': 'd', 'd': 'u', 'r': 'f', 'f': 'r', 'l': 'b', 'b': 'l' };
-let congrated = localStorage.getItem('bld.congrates') == '1';
-let scrText = '';
-function newScramble(){
-    ecCode = [];
-    let cube;
-    if (mode == 'r' || mode == 'w'){
-        cube = min2phase.randomCube().toLowerCase();
-    }
-    else{
-        let randE = mode == "rc";
-        let scrambleE = mode == 'ec' || mode == 'e' || mode == 'rc';
-        let scrambleC = mode == 'ec' || mode == 'c' || mode == 'rc';
-        occupied = Array(20).fill(false);
-        occupied[0] = occupied[12] = true;
-        let sf = [];
-        let hasPar = 0;
-        if (usePar && scrambleE && scrambleC && Math.random() < 0.5){
-            hasPar = 1;
-            genCode('par', 1, sf);
-        }
-        if (scrambleE && !randE){
-            let sfE = [];
-            if (Math.random() < ftWeight){
-                genCode('e+', 1, sfE);
-            }
-            if (Math.random() < flWeight){
-                genCode('e3', 1, sfE);
-            }
-            genCode('e', 999, ecCode);
-            ecCode.push(...sfE);
-        }
-        if (scrambleC){
-            let sfC = [];
-            if (Math.random() < flWeight){
-                genCode('c3', 1, sfC);
-            }
-            if (Math.random() < ft2Weight){
-                genCode('c++', 1, sf);
-            } else if (Math.random() < ftWeight){
-                genCode('c+', 1, sf);
-            }
-            genCode('c', 999, ecCode);
-            ecCode.push(...sfC);
-        }
-        ecCode.push(...sf);
-        cube = genCube(ecCode.join(''));
-        if (randE) {
-            let eoSum = 0, ep = randPerm(12), eo = Array.from({length: 12}, (_, i) => { const o = Math.random() * 2 | 0; eoSum ^= o; return o; });
-            eo[0] ^= eoSum;
-            let cubeArr = cube.split('');
-            for (let i = 0; i < 12; i++) {
-                cubeArr[edgeIdxOnCube[i*2]] = eFaces[ep[i]][eo[i]];
-                cubeArr[edgeIdxOnCube[i*2+1]] = eFaces[ep[i]][eo[i]^1];
-            }
-            if (randPermParity != hasPar) {
-                swap(cubeArr, edgeIdxOnCube[0], edgeIdxOnCube[6]);
-                swap(cubeArr, edgeIdxOnCube[1], edgeIdxOnCube[7]);
-            }
-            cube = cubeArr.join('');
-            if (hasPar) { // Remove parity code
-                ecCode.splice(ecCode.length - sf.length, 1);
-            }
-        }
-        const numToLearn = Object.keys(stats).filter(key => isNonPro(key) && stats[key].times == 0).length;
-        if (numToLearn == 0 && !congrated){
-            alert('Congratulations, you have learned all 818 algs!');
-            congrated = true;
-            localStorage.setItem('bld.congrates', '1');
-            return;
-        }
-    }
-    scrText = min2phase.scramble(cube);
-    if (mode == 'w'){
-        // Maybe not the same as WCA scramble, but still a uniformly random state
-        const randSuffix1 = Math.random() * 6 | 0, randSuffix2 = Math.random() * 4 | 0;
-        scrText += bfSuffix1[randSuffix1] + bfSuffix2[randSuffix2];
-        cube = invCycleCube(cube, sufCode2[randSuffix2] + sufCode1[randSuffix1]);
-        // Map YuRf to WuGf
-        cube = cube.split('').map(c => wcaOriMap[c] || c).join('');
-    }
-    updatePieceColors(cube);
-    document.querySelector('.title').innerText = scrText;
-    resetButtons();
-}
-
-const pushStats = (function() {
-  let timeout;
-  const delay = 300; // Delay in milliseconds
-  
-  return function(text) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-        if (!serverUrl || noPush) return;
-        fetch(`${serverUrl}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                text: text,
-                pswd: serverPassword
-            })
-        }).then(response => {
-            if (!response.ok) {
-                print(`Failed to push: ${response.status} ${response.statusText}`);
-            }
-        }).catch(err => {
-            print(`Error pushing stats: ${err}`);
-        });
-    }, delay);
-  };
-})();
-
-function saveStats(){
-    let statStr = Object.keys(stats).map(key => `${key}=${stats[key].times},${stats[key].mark}`).join('\n');
-    localStorage.setItem('bld.stats', statStr);
-}
-
-function markTimesAndUpdateScramble(stat){
-    event.preventDefault();
-    let statToPush = [];
-    ecCode.forEach(key => {
-        let stat = stats[key];
-        if (!stat) return;
-        stat.times++;
-        statToPush.push(`${key}=${stat.times},${stat.mark}`);
-    });
-    saveStats();
-    pushStats(statToPush.join('\n'));
+function onClickNext() {
+    const activeButtons = document.querySelectorAll('.toggle-btn.active');
+    const activeButtonNames = Array.from(activeButtons).map(btn => btn.textContent);
+    cube3.addMark(activeButtonNames);
+    print(`Add marks: ${cube3.keysToPush.map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+    cube3.addTimes();
+    server.saveStats();
     newScramble();
 }
 
-function addMark(keys){
-    let realKeys = [], statToPush = [];
-    keys.forEach(key => {
-        let stat = stats[key];
-        if (!stat) return;
-        stat.mark++;
-        realKeys.push(key);
-        statToPush.push(`${key}=${stat.times},${stat.mark}`);
-    });
-    if (realKeys.length > 0){
-        print(`Add Mark: ${realKeys.map(key => `${key}(${stats[key].mark}/${stats[key].times})`).join(', ')}`);
-        saveStats();
-        pushStats(statToPush.join('\n'));
-    }
+function newScramble() {
+    document.querySelector('.title').innerText = 'Generating Scramble...';
+    const s = cube3.newScramble();
+    drawCube.updatePieceColors(s.cube);
+    document.querySelector('.title').innerText = s.scr;
+    buttonRow.resetButtons();
 }
 
-function removeMark(keys){
-    let realKeys = [], statsToPush = [];
-    keys.forEach(key => {
-        let stat = stats[key];
-        if (!stat) return;
-        stat.times = 0;
-        stat.mark = 0;
-        realKeys.push(key);
-        statsToPush.push(`${key}=${stat.times},${stat.mark}`);
-    });
-    if (realKeys.length > 0){
-        print(`Remove Mark: ${realKeys.map(key => `${key}(${stats[key].mark}/${stats[key].times})`).join(', ')}`);
-        saveStats();
-        pushStats(statsToPush.join('\n'));
-    }
-}
-
-function getAlgInfo(key){
-    const code = codeDict[key.toUpperCase()] || '*';
-    const alg = algs[key] || '*';
-    const output = [
-        code,
-        alg,
-        `${stats[key].mark}${stats[key].more > 0 ? `(+${stats[key].more})` : ''}/${stats[key].times} [${getWeight(stats[key]).toFixed(2)}]`
-    ];
-    return output;
-}
-
-function toggleSettingsPanel() {
-    const panel = document.getElementById('settings-panel');
-    panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
-    if (panel.style.display === 'flex') {
-        document.getElementById('mode-select').value = mode;
-        document.getElementById('parity-ckbx').checked = usePar;
-        document.getElementById('mm-ckbx').checked = mm > 0;
-        document.getElementById('ft-slider').value = ftWeight;
-        document.getElementById('ft2-slider').value = ft2Weight;
-        document.getElementById('fl-slider').value = flWeight;
-        document.getElementById('lr-slider').value = learningRate;
-        document.getElementById('ff-slider').value = falloff;
-        document.getElementById('ft-value').innerText = ftWeight;
-        document.getElementById('ft2-value').innerText = ft2Weight;
-        document.getElementById('fl-value').innerText = flWeight;
-        document.getElementById('lr-value').innerText = learningRate;
-        document.getElementById('ff-value').innerText = falloff;
-        document.getElementById('timer-ckbx').checked = timerEnabled;
-        
-        let filtered = Object.keys(stats).filter(key => isNonPro(key) && stats[key].times > 0);
-        let progress = filtered.length;
-        let totalTimes = filtered.reduce((acc, key) => acc + stats[key].times, 0);
-        let totalMarks = filtered.reduce((acc, key) => acc + stats[key].mark, 0);
-        document.getElementById('tiny-line').innerText = `Progress=${progress}/818 (${(100 * progress / 818).toFixed(2)}%)
-            Avg Times=${(totalTimes / progress).toFixed(2)}
-            Avg Marks=${(totalMarks / progress).toFixed(2)}`;
-    }
-}
-
-function saveSettings(genScr=false) {
-    mode = document.getElementById('mode-select').value;
-    timerEnabled = document.getElementById('timer-ckbx').checked;
-    usePar = document.getElementById('parity-ckbx').checked;
-    mm = document.getElementById('mm-ckbx').checked ? 4 : 0;
-    ftWeight = parseFloat(document.getElementById('ft-slider').value);
-    ft2Weight = parseFloat(document.getElementById('ft2-slider').value);
-    flWeight = parseFloat(document.getElementById('fl-slider').value);
-    learningRate = parseFloat(document.getElementById('lr-slider').value);
-    falloff = parseFloat(document.getElementById('ff-slider').value);
-    localStorage.setItem('bld.mode', mode);
-    localStorage.setItem('bld.par', usePar);
-    localStorage.setItem('bld.ftWeight', ftWeight);
-    localStorage.setItem('bld.ft2Weight', ft2Weight);
-    localStorage.setItem('bld.flWeight', flWeight);
-    localStorage.setItem('bld.learningRate', learningRate);
-    localStorage.setItem('bld.falloff', falloff);
-    localStorage.setItem('bld.timer', timerEnabled);
-    localStorage.setItem('bld.moreMark', mm > 0);
-    if (genScr) newScramble();
-}
-
+// Command Input
 const textInput = document.getElementsByClassName('command-input')[0].getElementsByTagName('input')[0];
-let lastCmd = '';
+let cmd = '';
 document.addEventListener('keydown', function(event) {
-    if (isTimerRunning) {
+    if (timer.isTimerRunning) {
         event.preventDefault();
-        stopTimer();
+        timer.stopTimer();
         return;
     }
     if (event.key === 'Escape') {
@@ -1023,14 +870,26 @@ document.addEventListener('keydown', function(event) {
         document.getElementById('server-panel').style.display == 'flex') {
         return;
     }
-    if (event.key === ' ' && textInput !== document.activeElement && timerEnabled) {
+    if (event.key === ' ' && textInput !== document.activeElement && timer.enabled) {
         event.preventDefault();
-        startLongPress();
+        timer.startLongPress();
+        return;
+    }
+    if (event.key.length === 1 && event.key[0] >= '0' && event.key[0] <= '9' && textInput !== document.activeElement) {
+        event.preventDefault();
+        let idx = parseInt(event.key, 10);
+        if (idx == 0) { idx = 10; }
+        if (idx < buttonRow.buttonRow.children.length) {
+            let button = buttonRow.buttonRow.children[idx - 1];
+            if (button.classList.contains('toggle-btn')) {
+                button.click();
+            }
+        }
         return;
     }
     if (event.key === 'Tab') {
         event.preventDefault();
-        markTimesAndUpdateScramble();
+        onClickNext();
         textInput.blur();
         return;
     }
@@ -1039,202 +898,62 @@ document.addEventListener('keydown', function(event) {
     }
     if (event.key === 'ArrowUp') {
         event.preventDefault();
-        textInput.value = lastCmd;
+        textInput.value = cmd;
         textInput.focus();
         textInput.setSelectionRange(textInput.value.length, textInput.value.length);
     }
     if (event.key === 'Enter') {
-        lastCmd = textInput.value.trim();
-        let cmd = lastCmd.split(' ');
+        cmd = textInput.value.trim();
         textInput.value = '';
         textInput.blur();
         if (cmd.length == 0) return;
-        if (cmd[0][0] == '.') {
-            let key = cmd[0].substring(1);
-            if (stats[key]) {
-                print(`${key}: ${getAlgInfo(key).join(', ')}`);
-            } else if (algs[key]) {
-                print(`${key}: ${algs[key]}`);
-            } else if (codeDict[key.toUpperCase()]) {
-                print(`${key}: ${codeDict[key.toUpperCase()]}`);
+        if (cmd[0] === '.') {
+            let key = cmd.substring(1).trimStart();
+            if (cube3.stats[key]) {
+                print(`${key}: ${cube3.getAlgInfo(key).filter(x=>x!=='*').join(', ')}`);
+            } else if (cube3.algs[key]) {
+                print(`${key}: ${cube3.algs[key]}`);
+            } else if (cube3.codeDict[key.toUpperCase()]) {
+                print(`${key}: ${cube3.codeDict[key.toUpperCase()]}`);
             } else {
                 print('Key not found.');
             }
-            return;
-        }
-        switch (cmd[0].toLowerCase()) {
-            case '+':
-                addMark(cmd.slice(1));
-                break;    
-            case '-':
-                removeMark(cmd.slice(1));
-                break;
-            case 'alg':
-                const randKey = markedAlgKeys[Math.floor(Math.random() * markedAlgKeys.length)];
-                print(`${randKey}: ${algs[randKey]}`);
-                break;
-            case 'cp':
-                navigator.clipboard.writeText(lastSolveInfo).then(() => {
-                    print('Copied: ' + lastSolveInfo);
-                }).catch(err => {
-                    print('Failed to copy: ' + err);
-                });
-                break;
-            case 'top':
-                let numTop = cmd.length > 1? parseInt(cmd[1]) : 10;
-                let topKeys = Object.keys(stats).filter(key => isNonPro(key))
-                    .sort((a, b) => (stats[b].mark - stats[a].mark) || (stats[a].times - stats[b].times)).slice(0, numTop);
-                print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${stats[key].mark}/${stats[key].times})`).join(', ')}`);
-                break;
-            case 'push':
-                pushStats(localStorage.getItem('bld.stats'));
-                break;
-            case 'ud':
-                getServer(true);
-                forceUpdate();
-                break;
-            default:
-                print(`Unknown command: ${cmd[0]}. Usage: ./+/-/alg/cp/top/ud`);
-                break;
+        } else if (cmd[0] === '+') {
+            const keys = cmd.substring(1).trimStart().split(' ');
+            cube3.addMark(keys);
+            print(`Add marks: ${cube3.keysToPush.map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+            server.saveStats();
+        } else if (cmd[0] === '-') {
+            const keys = cmd.substring(1).trimStart().split(' ');
+            cube3.removeMark(keys);
+            print(`Remove marks: ${cube3.keysToPush.map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+            server.saveStats();
+        } else if (cmd === 'alg') {
+            const randKey = cube3.markedAlgKeys[Math.floor(Math.random() * cube3.markedAlgKeys.length)];
+            print(`${randKey}: ${cube3.algs[randKey]}`);
+        } else if (cmd === 'cp') {
+            const lastSolveInfo = `${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`;
+            navigator.clipboard.writeText(lastSolveInfo).then(() => {
+                print(`Copied: ${timer.finalTimeStr} ... @${timer.nowTimeStr}`);
+            }).catch(err => {
+                print('Failed to copy: ' + err);
+            });
+        } else if (cmd === 'top') {
+            const numTop = 10;
+            let topKeys = Object.keys(cube3.stats).filter(key => cube3.isNonPro(key))
+                .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
+            print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
+        } else if (cmd === 'ud') {
+            server.loadData(true);
+            forceUpdate();
+        } else {
+            print(`Unknown command: ${cmd}. Usage: .key, ./+/-/alg/cp/top/ud`);
         }
     }
 });
-
-const buttonRow = document.querySelector('.button-row');
-const newButton = document.createElement('button');
-const nextButtonHtml = '<button id="nextButton" onclick="onClickNext()">Next &rarr;</button>';
-function _showHoverText(event) {
-    const hoverText = document.createElement('div');
-    hoverText.className = 'hover-text';
-    hoverText.innerHTML = getAlgInfo(event.target.textContent).join('<br>');
-    event.target.appendChild(hoverText);
-}
-function _hideHoverText(event) {
-    const hoverText = event.target.querySelector('.hover-text');
-    if (hoverText) {
-        event.target.removeChild(hoverText);
-    }
-}
-function _genButton(text) {
-    const button = document.createElement('button');
-    button.textContent = text;
-    button.className = 'toggle-btn';
-    if (stats[text]) {
-        button.onclick = function() { this.classList.toggle('active'); };
-        button.addEventListener('mouseover', _showHoverText);
-        button.addEventListener('mouseout', _hideHoverText);
-        if (stats[text]) {
-            if (stats[text].mark > 0) {
-                button.classList.add('non-zero-mark');
-            }
-            if (stats[text].more > 0) {
-                button.classList.add('subset-mark');
-            }
-        }
-    }
-    return button;
-}
-function resetButtons() {
-    buttonRow.innerHTML = '';
-    ecCode.forEach(code => buttonRow.appendChild(_genButton(code)));
-    buttonRow.appendChild(document.createElement('button')).outerHTML = nextButtonHtml;
-}
-function onClickNext() {
-    const activeButtons = document.querySelectorAll('.toggle-btn.active');
-    const activeButtonNames = Array.from(activeButtons).map(btn => btn.textContent);
-    markTimesAndUpdateScramble();
-    addMark(activeButtonNames);
-}
-
-const canvas = document.getElementById('canvas');
-const timerContainer = document.getElementById('timer-container');
-const timerDisplay = document.getElementById('timer-display');
-const commandOutput = document.getElementById('command-output');
-let timerInterval;
-let startTime;
-let longPressTimer;
-let isTimerRunning = false;
-let pressStarted = false;
-let lastSolveInfo = '';
-function formatTime(time) {
-    const seconds = (time / 1000) | 0;
-    const milliseconds = ((time % 1000) / 10) | 0;
-    return `${seconds}.${milliseconds.toString().padStart(2, '0')}`;
-}
-function startTimer() {
-    if (!timerEnabled) return;
-    isTimerRunning = true;
-    startTime = new Date().getTime();
-    timerInterval = setInterval(() => {
-        const currentTime = new Date().getTime() - startTime;
-        timerDisplay.textContent = formatTime(currentTime);
-    }, 37);
-}
-function stopTimer() {
-    if (isTimerRunning){
-        const now = new Date();
-        const nowStr = now.toLocaleString('sv-SE').replace('T', ' ');
-        const finalTime = now.getTime() - startTime;
-        if (finalTime < 200) return;
-        clearInterval(timerInterval);
-        const finalTimeStr = formatTime(finalTime);
-        commandOutput.textContent = `Time: ${finalTimeStr}`;
-        lastSolveInfo = `${finalTimeStr}  ${scrText}  @${nowStr}`;
-        isTimerRunning = false;
-    }
-    timerContainer.style.display = 'none';
-}
-function prepareTimer() {
-    if (!timerEnabled) return;
-    timerContainer.style.display = 'flex';
-    timerDisplay.textContent = '0.00';
-}
-function startLongPress() {
-    if (!timerEnabled) return false;
-    pressStarted = true;
-    longPressTimer = setTimeout(() => {
-        prepareTimer();
-    }, 500);
-    return true;
-}
-function endPress() {
-    if (pressStarted) {
-        clearTimeout(longPressTimer);
-        if (timerContainer.style.display === 'flex' && !isTimerRunning) {
-            startTimer();
-        }
-        pressStarted = false;
-    }
-}
-canvas.addEventListener('mousedown', () => startLongPress());
-document.addEventListener('mouseup', () => endPress());
-canvas.addEventListener('touchstart', () => startLongPress());
-document.addEventListener('touchend', () => endPress());
-document.addEventListener('touchcancel', () => {
-    if (pressStarted) {
-        clearTimeout(longPressTimer);
-        pressStarted = false;
-        stopTimer();
-    }
-});
-timerContainer.addEventListener('mousedown', stopTimer);
-timerContainer.addEventListener('touchstart', stopTimer);
-document.addEventListener('keyup', (e) => {
-    if (e.key === ' ' && textInput !== document.activeElement && timerEnabled && !isTimerRunning) {
-        endPress();
-    }
-});
-window.addEventListener('blur', () => {
-    if (pressStarted) {
-        clearTimeout(longPressTimer);
-        pressStarted = false;
-        stopTimer();
-    }
-});
-
 
 document.addEventListener('DOMContentLoaded', () => {
-    getServer();
+    server.loadData();
     newScramble();
 });
 

@@ -1,9 +1,10 @@
-const CACHE_NAME = 'my-site-cache-v1';
+const CACHE_NAME = 'nada';
 const urlsToCache = [
     './',
     './index.html',
     './favicon.svg',
-    './min2phase.js'
+    './min2phase.js',
+    './cube3.js',
 ];
 self.addEventListener('install', event => {
     event.waitUntil(
