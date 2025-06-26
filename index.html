@@ -533,7 +533,7 @@ class Server {
     }
     
     push(key, value) {
-        if (!this.serverUrl) return;
+        if (!this.serverUrl || !this.serverPassword) return;
         fetch(`${this.serverUrl}`, {
             method: 'POST',
             headers: {
