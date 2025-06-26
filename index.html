@@ -392,10 +392,7 @@
     <div id="server-panel">
         <input type="text" id="server-url" class="server-input" placeholder="Server URL">
         <input type="password" id="server-password" class="server-input" placeholder="Password">
-        <div class="setting">
-            <label>No Push</label>
-            <input type="checkbox" id="no-push" onchange="saveSettings()">
-        </div>
+        <div class="setting"></div>
         <button id="back-button" onclick="saveServerSettings()">Save</button>
         <button id="back-button" onclick="toggleServerPanel()">Close</button>
     </div>
@@ -516,49 +513,46 @@ class Server {
     constructor() {
         this.serverUrl = localStorage.getItem('bld.serverUrl') || '';
         this.serverPassword = localStorage.getItem('bld.serverPswd') || '';
-        this.noPush = localStorage.getItem('bld.noPush') === 'true';
+        this.synced = true;
     }
     
     getItem(key, func, forceServer = false) {
-        let savedItem;
-        if (!forceServer) {
-            savedItem = localStorage.getItem(`bld.${key}`);
-        }
+        let savedItem = localStorage.getItem(`bld.${key}`);
         if (this.serverUrl && (!savedItem || forceServer)) {
             fetch(`${this.serverUrl}/${key}`)
             .then(response => response.text())
             .then(text => {
                 savedItem = text;
                 localStorage.setItem(`bld.${key}`, text);
-                func(savedItem);
             }).catch(err => {
-                if (!savedItem) {
-                    savedItem = localStorage.getItem(`bld.${key}`);
-                    func(savedItem);
-                }
+                print(`Error fetching from server: ${err}`);
             });
-        } else if (savedItem) {
+        }
+        if (savedItem) {
             func(savedItem);
         }
     }
     
-    pushStats(text) {
-        if (!self.serverUrl || self.noPush) return;
-        fetch(`${self.serverUrl}`, {
+    push(key, value) {
+        if (!this.serverUrl) return;
+        fetch(`${this.serverUrl}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                text: text,
-                pswd: self.serverPassword
+                key,
+                value,
+                pswd: this.serverPassword
             })
         }).then(response => {
             if (!response.ok) {
+                this.synced = false;
                 print(`Failed to push: ${response.status} ${response.statusText}`);
             }
         }).catch(err => {
-            print(`Error pushing stats: ${err}`);
+            this.synced = false;
+            print(`Error pushing ${key}: ${err}`);
         });
     }
     
@@ -568,11 +562,13 @@ class Server {
         }
         this.getItem('alg', text => cube3.updateAlg(text), forceServer);
         this.getItem('mem', text => cube3.updateMem(text), forceServer);
-        this.getItem('stats', text => cube3.updateStats(text), forceServer);
+        this.getItem('stats', text => cube3.updateStats(text), !this.synced || forceServer);
+        this.getItem('settings', text => cube3.updateSettings(JSON.parse(text)), !this.synced || forceServer);
+        this.synced = true;
     }
     
     saveStats() {
-        this.pushStats(cube3.keysToPush.map(x => 
+        this.push('stats', cube3.keysToPush.map(x => 
             `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
         ).join('\n'));
         cube3.clearKeysToPush();
@@ -790,6 +786,7 @@ function saveSettings(genScr=false) {
         falloff: parseFloat(document.getElementById('ff-slider').value)
     };
     cube3.updateSettings(newSettings);
+    server.push('settings', JSON.stringify(newSettings));
     if (genScr) newScramble();
 }
 
@@ -797,14 +794,12 @@ function saveSettings(genScr=false) {
 function saveServerSettings() {
     let _serverUrl = document.getElementById('server-url').value;
     let _serverPassword = document.getElementById('server-password').value;
-    server.noPush = document.getElementById('no-push').checked;
     if (!_serverUrl) return;
     
     server.serverUrl = _serverUrl;
     server.serverPassword = _serverPassword;
     localStorage.setItem('bld.serverUrl', server.serverUrl);
     localStorage.setItem('bld.serverPswd', server.serverPassword);
-    localStorage.setItem('bld.noPush', server.noPush);
     server.loadData(true);
     toggleServerPanel();
     forceUpdate();
@@ -821,7 +816,6 @@ function toggleServerPanel() {
         
         document.getElementById('server-url').value = server.serverUrl;
         document.getElementById('server-password').value = server.serverPassword;
-        document.getElementById('no-push').checked = server.noPush;
     }
 }
 
@@ -829,7 +823,9 @@ function onClickNext() {
     const activeButtons = document.querySelectorAll('.toggle-btn.active');
     const activeButtonNames = Array.from(activeButtons).map(btn => btn.textContent);
     cube3.addMark(activeButtonNames);
-    print(`Add marks: ${cube3.keysToPush.map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+    if (cube3.keysToPush.length > 0) {
+        print(`Add marks: ${cube3.keysToPush.map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+    }
     cube3.addTimes();
     server.saveStats();
     newScramble();
