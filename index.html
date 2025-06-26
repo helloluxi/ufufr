@@ -513,12 +513,11 @@ class Server {
     constructor() {
         this.serverUrl = localStorage.getItem('bld.serverUrl') || '';
         this.serverPassword = localStorage.getItem('bld.serverPswd') || '';
-        this.synced = true;
     }
     
-    getItem(key, func, forceServer = false) {
+    getItem(key, func, preferServer = false) {
         let savedItem = localStorage.getItem(`bld.${key}`);
-        if (this.serverUrl && (!savedItem || forceServer)) {
+        if (this.serverUrl && (!savedItem || preferServer)) {
             fetch(`${this.serverUrl}/${key}`)
             .then(response => response.text())
             .then(text => {
@@ -547,24 +546,21 @@ class Server {
             })
         }).then(response => {
             if (!response.ok) {
-                this.synced = false;
                 print(`Failed to push: ${response.status} ${response.statusText}`);
             }
         }).catch(err => {
-            this.synced = false;
             print(`Error pushing ${key}: ${err}`);
         });
     }
     
-    loadData(forceServer = false) {
+    loadData(preferServer = false) {
         if (!this.serverUrl) {
             print('No server.');
         }
-        this.getItem('alg', text => cube3.updateAlg(text), forceServer);
-        this.getItem('mem', text => cube3.updateMem(text), forceServer);
-        this.getItem('stats', text => cube3.updateStats(text), !this.synced || forceServer);
-        this.getItem('settings', text => cube3.updateSettings(JSON.parse(text)), !this.synced || forceServer);
-        this.synced = true;
+        this.getItem('alg', text => cube3.updateAlg(text), preferServer);
+        this.getItem('mem', text => cube3.updateMem(text), preferServer);
+        this.getItem('stats', text => cube3.updateStats(text), true);
+        this.getItem('settings', text => cube3.updateSettings(JSON.parse(text)), true);
     }
     
     saveStats() {
