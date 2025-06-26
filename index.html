@@ -566,11 +566,11 @@ class Server {
     saveStats() {
         this.push('stats', cube3.keysToPush.map(x => 
             `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
-        ).join('\n'));
+        ).join(';'));
         cube3.clearKeysToPush();
         localStorage.setItem('bld.stats', Object.keys(cube3.stats).map(x =>
             `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
-        ).join('\n'));
+        ).join(';'));
     }
 }
 

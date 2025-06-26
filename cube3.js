@@ -182,7 +182,7 @@ class Cube3 {
     }
 
     updateStats(text) {
-        text.split(/\r?\n/).forEach(item => {
+        text.split(';').forEach(item => {
             if (item.trim().length == 0) return;
             try {
                 const [key, value] = item.split('=');
