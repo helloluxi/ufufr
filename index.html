@@ -938,15 +938,27 @@ document.addEventListener('keydown', function(event) {
                     print('Failed to copy: ' + err);
                 });
             } else if (cmd === 'top') {
-                const numTop = 10;
+                const numTop = 7;
                 let topKeys = Object.keys(cube3.stats).filter(key => cube3.isNonPro(key))
                     .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
                 print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
             } else if (cmd === 'ud') {
                 server.loadData(true);
                 forceUpdate();
+            } else if (cmd.startsWith('mode')) {
+                const modeStr = cmd.substring(4).trim();
+                if (['rc', 'ec', 'e', 'c', 'r', 'w'].includes(modeStr)) {
+                    const modeSelect = document.getElementById('mode-select');
+                    modeSelect.value = modeStr;
+                    const selectedOption = modeSelect.options[modeSelect.selectedIndex];
+                    const displayName = selectedOption.text;
+                    saveSettings(true);
+                    print(`Mode => ${displayName}`);
+                } else {
+                    print(`Unknown mode: ${modeStr}. Modes: rc, ec, e, c, r, w`);
+                }
             } else {
-                print(`Unknown command: ${cmd}. Usage: ./+/-/alg/cp/top/ud`);
+                print(`Unknown command: ${cmd}. Usage: ./+/-/alg/cp/mode/top/ud`);
             }
         }
     }
