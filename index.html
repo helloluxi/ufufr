@@ -559,18 +559,27 @@ class Server {
         }
         this.getItem('alg', text => cube3.updateAlg(text), preferServer);
         this.getItem('mem', text => cube3.updateMem(text), preferServer);
-        this.getItem('stats', text => cube3.updateStats(text), true);
+        this.getItem('e', text => cube3.updateStats(text), true);
+        this.getItem('c', text => cube3.updateStats(text), true);
         this.getItem('settings', text => cube3.updateSettings(JSON.parse(text)), true);
     }
     
     saveStats() {
-        this.push('stats', cube3.keysToPush.map(x => 
+        this.push('e', cube3.eKeysToPush.map(x => 
+            `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
+        ).join(';'));
+        this.push('c', cube3.cKeysToPush.map(x => 
             `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
         ).join(';'));
         cube3.clearKeysToPush();
-        localStorage.setItem('bld.stats', Object.keys(cube3.stats).map(x =>
-            `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
-        ).join(';'));
+        // Save to Local Stotage
+        let eStats = [], cStats = [];
+        Object.keys(cube3.stats).forEach(x => {
+            const whichStats = cube3.stats[x].cat.startsWith('c') ? cStats : eStats;
+            whichStats.push(`${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`);
+        });
+        localStorage.setItem('bld.e', eStats.join(';'));
+        localStorage.setItem('bld.c', cStats.join(';'));
     }
 }
 
@@ -619,7 +628,7 @@ class ButtonRow {
     
     resetButtons() {
         this.buttonRow.innerHTML = '';
-        cube3.ecCode.forEach(code => this.buttonRow.appendChild(this.generateButton(code)));
+        cube3.displayKeys.forEach(code => this.buttonRow.appendChild(this.generateButton(code)));
         this.buttonRow.appendChild(document.createElement('button')).outerHTML = this.nextButtonHtml;
     }
 }
@@ -819,8 +828,8 @@ function onClickNext() {
     const activeButtons = document.querySelectorAll('.toggle-btn.active');
     const activeButtonNames = Array.from(activeButtons).map(btn => btn.textContent);
     cube3.addMark(activeButtonNames);
-    if (cube3.keysToPush.length > 0) {
-        print(`Add marks: ${cube3.keysToPush.map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+    if (cube3.getAllKeysToPush().length > 0) {
+        print(`Add marks: ${cube3.getAllKeysToPush().map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
     }
     cube3.addTimes();
     server.saveStats();
@@ -910,20 +919,20 @@ document.addEventListener('keydown', function(event) {
                 print(`${key}: ${cube3.getAlgInfo(key).filter(x=>x!=='*').join(', ')}`);
             } else if (cube3.algs[key]) {
                 print(`${key}: ${cube3.algs[key]}`);
-            } else if (cube3.codeDict[key.toUpperCase()]) {
-                print(`${key}: ${cube3.codeDict[key.toUpperCase()]}`);
+            } else if (cube3.memDict[key.toUpperCase()]) {
+                print(`${key}: ${cube3.memDict[key.toUpperCase()]}`);
             } else {
                 print('Key not found.');
             }
         } else if (cmd[0] === '+') {
             const keys = cmd.substring(1).trimStart().split(' ');
             cube3.addMark(keys);
-            print(`Add marks: ${cube3.keysToPush.map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+            print(`Add marks: ${cube3.getAllKeysToPush().map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
             server.saveStats();
         } else if (cmd[0] === '-') {
             const keys = cmd.substring(1).trimStart().split(' ');
             cube3.removeMark(keys);
-            print(`Remove marks: ${cube3.keysToPush.map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+            print(`Remove marks: ${cube3.getAllKeysToPush().map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
             server.saveStats();
         } else {
             cmd = cmd.toLowerCase();

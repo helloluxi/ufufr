@@ -25,12 +25,15 @@ class Cube3 {
         // Stats and training data
         this.stats = {};
         this.algs = {};
-        this.codeDict = {};
+        this.memDict = {};
         this.markedAlgKeys = [];
-        this.ecCode = [];
+        this.eKeys = [];
+        this.cKeys = [];
+        this.displayKeys = [];
+        this.eKeysToPush = [];
+        this.cKeysToPush = [];
         this.occupied = null;
         this.congrated = localStorage.getItem('bld.congrates') == '1';
-        this.keysToPush = [];
 
         // Load settings
         const settingsStr = localStorage.getItem('bld.settings');
@@ -172,12 +175,12 @@ class Cube3 {
     }
 
     updateMem(text) {
-        this.codeDict = {};
+        this.memDict = {};
         text.split(/\r?\n/).forEach(line => {
             let eqIdx = line.indexOf('=');
             if (eqIdx === -1) return;
             let key = line.substring(0, eqIdx).trim();
-            this.codeDict[key] = line.substring(eqIdx + 1).trim();
+            this.memDict[key] = line.substring(eqIdx + 1).trim();
         });
     }
 
@@ -187,10 +190,8 @@ class Cube3 {
             try {
                 const [key, value] = item.split('=');
                 const [times, mark] = value.split(',').map(Number);
-                if (Number.isInteger(times) && times >= 0 && Number.isInteger(mark) && mark >= 0) {
-                    if (this.stats[key]) {
-                        [this.stats[key].times, this.stats[key].mark] = [times, mark];
-                    }
+                if (Number.isInteger(times) && times >= 0 && Number.isInteger(mark) && mark >= 0 && this.stats[key]) {
+                    [this.stats[key].times, this.stats[key].mark] = [times, mark];
                 }
             } catch (e) {
                 console.error(`Error parsing stats line: ${item}`, e);
@@ -217,7 +218,7 @@ class Cube3 {
         return stat.times == 0 ? this.learningRate : Math.pow(stat.times, -2 / (1 + (stat.mark + stat.more) * this.falloff));
     }
 
-    genCode(cat, maxCount, code) {
+    genCode(cat, maxCount, resList) {
         if (cat.endsWith('3')) {
             let indices = [], ocStart = cat[0] == 'e' ? 0 : 12, ocCount = cat[0] == 'e' ? 12 : 8, gap = cat[0] == 'e' ? 2 : 3;
             let idxPool = [...Array(ocCount).keys()].filter(ocIdx => !this.occupied[ocIdx + ocStart]);
@@ -230,7 +231,7 @@ class Cube3 {
             indices.sort((a, b) => a - b);
             let codePool = cat[0] == 'e' ? Cube3.edgeCode : Cube3.cornCode;
             const codes = [codePool[indices[0] * gap], codePool[indices[1] * gap + (Math.random() * gap | 0)], codePool[indices[2] * gap + (Math.random() * gap | 0)]];
-            code.push(`${codes[0]}${codes[1]}${codes[2]}${codes[0]}`);
+            resList.push(`${codes[0]}${codes[1]}${codes[2]}${codes[0]}`);
         }
         else {
             let weights = {};
@@ -254,23 +255,29 @@ class Cube3 {
             }
             for (let i = 0; i < tmpAlgs.length; i++) {
                 let j = Math.floor(Math.random() * (tmpAlgs.length - i));
-                code.push(tmpAlgs[j]);
+                resList.push(tmpAlgs[j]);
                 tmpAlgs[j] = tmpAlgs[tmpAlgs.length - i - 1];
             }
         }
     }
 
+    getAllKeysToPush() {
+        return this.eKeysToPush.concat(this.cKeysToPush);
+    }
+
     clearKeysToPush() {
-        this.keysToPush = [];
+        this.eKeysToPush.length = 0;
+        this.cKeysToPush.length = 0;
     }
 
     addTimes() {
-        this.ecCode.forEach(key => {
+        this.eKeys.concat(this.cKeys).forEach(key => {
             let stat = this.stats[key];
             if (!stat) return;
             stat.times++;
-            this.keysToPush.push(key);
         });
+        this.eKeys.forEach(key => this.stats[key] && this.eKeysToPush.push(key));
+        this.cKeys.forEach(key => this.stats[key] && this.cKeysToPush.push(key));
     }
 
     addMark(keys) {
@@ -278,7 +285,7 @@ class Cube3 {
             let stat = this.stats[key];
             if (!stat) return;
             stat.mark++;
-            this.keysToPush.push(key);
+            (key.split('').some(k => this.isUpper(k)) ? this.eKeysToPush : this.cKeysToPush).push(key);
         });
     }
 
@@ -288,19 +295,15 @@ class Cube3 {
             if (!stat) return;
             stat.times = 0;
             stat.mark = 0;
-            this.keysToPush.push(key);
+            (key.split('').some(k => this.isUpper(k)) ? this.eKeysToPush : this.cKeysToPush).push(key);
         });
     }
 
     getAlgInfo(key) {
-        const code = this.codeDict[key.toUpperCase()] || '*';
+        const mem = this.memDict[key.toUpperCase()] || '*';
         const alg = this.algs[key] || '*';
-        if (!this.stats[key]) return [code, alg, 'No stats'];
-        return [
-            code,
-            alg,
-            `${this.stats[key].mark}${this.stats[key].more > 0 ? `(+${this.stats[key].more})` : ''}/${this.stats[key].times} [${this.getWeight(key).toFixed(2)}]`
-        ];
+        const stat = this.stats[key] ? `${this.stats[key].mark}${this.stats[key].more > 0 ? `(+${this.stats[key].more})` : ''}/${this.stats[key].times} [${this.getWeight(key).toFixed(2)}]` : '*';
+        return [mem, alg, stat];
     }
 
     randPerm(n) {
@@ -337,51 +340,55 @@ class Cube3 {
     }
 
     newScramble() {
-        this.ecCode = [];
+        this.eKeys.length = 0;
+        this.cKeys.length = 0;
+        this.displayKeys.length = 0;
         let cube;
         if (this.mode == 'r' || this.mode == 'w') {
             cube = min2phase.randomCube().toLowerCase();
         }
         else {
-            let randE = this.mode == "rc";
+            let modeRC = this.mode == "rc";
             let scrambleE = this.mode == 'ec' || this.mode == 'e' || this.mode == 'rc';
             let scrambleC = this.mode == 'ec' || this.mode == 'c' || this.mode == 'rc';
             this.occupied = Array(20).fill(false);
             this.occupied[0] = this.occupied[12] = true;
-            let sf = [];
+            let sfPar = [];
             let hasPar = 0;
             if (this.usePar && scrambleE && scrambleC && Math.random() < 0.5) {
                 hasPar = 1;
-                this.genCode('par', 1, sf);
+                this.genCode('par', 1, sfPar);
             }
-            if (scrambleE && !randE) {
+            if (scrambleE && !modeRC) {
                 let sfE = [];
                 if (Math.random() < this.ftWeight) {
-                    this.genCode('e+', 1, sfE);
+                    this.genCode('e+', 1, sfE); // E Flip
                 }
                 if (Math.random() < this.flWeight) {
-                    this.genCode('e3', 1, sfE);
+                    this.genCode('e3', 1, sfE); // Float E3
                 }
-                this.genCode('e', 999, this.ecCode);
-                this.ecCode.push(...sfE);
+                this.genCode('e', 999, this.eKeys); // Normal E3, must be last
+                this.eKeys.push(...sfE);
+                this.displayKeys.push(...this.eKeys);
             }
             if (scrambleC) {
-                let sfC = [];
+                let sfC = [], sfTwist = [];
                 if (Math.random() < this.flWeight) {
-                    this.genCode('c3', 1, sfC);
+                    this.genCode('c3', 1, sfC); // Float C3
                 }
                 if (Math.random() < this.ft2Weight) {
-                    this.genCode('c++', 1, sf);
+                    this.genCode('c++', 1, sfTwist); // C 3-Twist
                 } else if (Math.random() < this.ftWeight) {
-                    this.genCode('c+', 1, sf);
+                    this.genCode('c+', 1, sfTwist); // C 2-Twist
                 }
-                this.genCode('c', 999, this.ecCode);
-                this.ecCode.push(...sfC);
+                this.genCode('c', 999, this.cKeys); // Normal C3, must be last
+                this.displayKeys.push(...this.cKeys);
+                this.cKeys.push(...sfC, ...sfTwist);
+                this.displayKeys.push(...sfC, ...sfPar, ...sfTwist);
             }
-            this.ecCode.push(...sf);
-            cube = this.genCube(this.ecCode.join(''));
-            if (randE) {
-                let eoSum = 0, ep = this.randPerm(12), eo = Array.from({ length: 12 }, (_, i) => { const o = Math.random() * 2 | 0; eoSum ^= o; return o; });
+            cube = this.genCube(this.displayKeys.join(''));
+            if (modeRC) {
+                let eoSum = 0, ep = this.randPerm(12), eo = Array.from({ length: 12 }, _ => { const o = Math.random() * 2 | 0; eoSum ^= o; return o; });
                 eo[0] ^= eoSum;
                 let cubeArr = cube.split('');
                 for (let i = 0; i < 12; i++) {
@@ -393,9 +400,8 @@ class Cube3 {
                     this.swap(cubeArr, Cube3.edgeIdxOnCube[1], Cube3.edgeIdxOnCube[7]);
                 }
                 cube = cubeArr.join('');
-                if (hasPar) { // Remove parity code
-                    this.ecCode.splice(this.ecCode.length - sf.length, 1);
-                }
+                this.eKeys.length = 0;
+                // this.displayKeys.length = this.cKeys.length;
             }
         }
         let scr = min2phase.scramble(cube);
