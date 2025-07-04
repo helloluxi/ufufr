@@ -524,7 +524,7 @@ class Server {
                 savedItem = text;
                 localStorage.setItem(`bld.${key}`, text);
             }).catch(err => {
-                print(`Error fetching from server: ${err}`);
+                print(`Error: ${err}`);
             });
         }
         if (savedItem) {

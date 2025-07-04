@@ -401,7 +401,7 @@ class Cube3 {
                 }
                 cube = cubeArr.join('');
                 this.eKeys.length = 0;
-                // this.displayKeys.length = this.cKeys.length;
+                this.displayKeys = this.displayKeys.filter(key => !key.split('').some(k => this.isUpper(k)));
             }
         }
         let scr = min2phase.scramble(cube);
