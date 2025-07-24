@@ -5,6 +5,7 @@ const urlsToCache = [
     './favicon.svg',
     './min2phase.js',
     './cube3.js',
+    './manifest.json'
 ];
 self.addEventListener('install', event => {
     event.waitUntil(
