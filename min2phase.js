@@ -105,7 +105,7 @@ var min2phase = (function() {
 			ckmv2bit[i] = 0;
 			for (var j = 0; j < 10; j++) {
 				var jx = ~~(ud2std[j] / 3);
-				ckmv2bit[i] |= ((ix == jx) || ((ix % 3 == jx % 3) && (ix >= jx)) ? 1 : 0) << j;
+				ckmv2bit[i] |= ((ix === jx) || ((ix % 3 === jx % 3) && (ix >= jx)) ? 1 : 0) << j;
 			}
 		}
 		ckmv2bit[10] = 0;
@@ -210,7 +210,7 @@ var min2phase = (function() {
 			r = 4;
 		for (var i = end; i >= 0; i--) {
 			var perm = arr[i] & 0xf;
-			if ((perm & 0xc) == mask) {
+			if ((perm & 0xc) === mask) {
 				idxC += Cnk[i][r--];
 			}
 		}
@@ -226,7 +226,7 @@ var min2phase = (function() {
 				idxC -= Cnk[i][r--];
 				arr[i] = arr[i] & 0xf0 | r | mask;
 			} else {
-				if ((fill & 0xc) == mask) {
+				if ((fill & 0xc) === mask) {
 					fill -= 4;
 				}
 				arr[i] = arr[i] & 0xf0 | fill--;
@@ -258,7 +258,7 @@ var min2phase = (function() {
 			var oriA = a.ca[b.ca[corn] & 0xf] >> 4;
 			var oriB = b.ca[corn] >> 4;
 			var ori = oriA + ((oriA < 3) ? oriB : 6 - oriB);
-			ori = ori % 3 + ((oriA < 3) == (oriB < 3) ? 0 : 3);
+			ori = ori % 3 + ((oriA < 3) === (oriB < 3) ? 0 : 3);
 			prod.ca[corn] = a.ca[b.ca[corn] & 0xf] & 0xf | ori << 4;
 		}
 	}
@@ -446,7 +446,7 @@ var min2phase = (function() {
 		var centers = facelet[4] + facelet[13] + facelet[22] + facelet[31] + facelet[40] + facelet[49];
 		for (var i = 0; i < 54; ++i) {
 			f[i] = centers.indexOf(facelet[i]);
-			if (f[i] == -1) {
+			if (f[i] === -1) {
 				return -1;
 			}
 			count += 1 << (f[i] << 2);
@@ -457,12 +457,12 @@ var min2phase = (function() {
 		var col1, col2, i, j, ori;
 		for (i = 0; i < 8; ++i) {
 			for (ori = 0; ori < 3; ++ori)
-				if (f[cFacelet[i][ori]] == 0 || f[cFacelet[i][ori]] == 3)
+				if (f[cFacelet[i][ori]] === 0 || f[cFacelet[i][ori]] === 3)
 					break;
 			col1 = f[cFacelet[i][(ori + 1) % 3]];
 			col2 = f[cFacelet[i][(ori + 2) % 3]];
 			for (j = 0; j < 8; ++j) {
-				if (col1 == ~~(cFacelet[j][1] / 9) && col2 == ~~(cFacelet[j][2] / 9)) {
+				if (col1 === ~~(cFacelet[j][1] / 9) && col2 === ~~(cFacelet[j][2] / 9)) {
 					this.ca[i] = j | ori % 3 << 4;
 					break;
 				}
@@ -470,11 +470,11 @@ var min2phase = (function() {
 		}
 		for (i = 0; i < 12; ++i) {
 			for (j = 0; j < 12; ++j) {
-				if (f[eFacelet[i][0]] == ~~(eFacelet[j][0] / 9) && f[eFacelet[i][1]] == ~~(eFacelet[j][1] / 9)) {
+				if (f[eFacelet[i][0]] === ~~(eFacelet[j][0] / 9) && f[eFacelet[i][1]] === ~~(eFacelet[j][1] / 9)) {
 					this.ea[i] = j;
 					break;
 				}
-				if (f[eFacelet[i][0]] == ~~(eFacelet[j][1] / 9) && f[eFacelet[i][1]] == ~~(eFacelet[j][0] / 9)) {
+				if (f[eFacelet[i][0]] === ~~(eFacelet[j][1] / 9) && f[eFacelet[i][1]] === ~~(eFacelet[j][0] / 9)) {
 					this.ea[i] = j | 0x10;
 					break;
 				}
@@ -610,7 +610,7 @@ var min2phase = (function() {
 			this.urfCubieCube[i].init(this.cc.ca, this.cc.ea);
 			this.urfCoordCube[i].setWithPrun(this.urfCubieCube[i], 20);
 			this.cc.URFConjugate();
-			if (i % 3 == 2) {
+			if (i % 3 === 2) {
 				var tmp = new CubieCube().invFrom(this.cc);
 				this.cc.init(tmp.ca, tmp.ea);
 			}
@@ -628,7 +628,7 @@ var min2phase = (function() {
 	}
 
 	Search.prototype.verify = function(facelets) {
-		if (this.cc.fromFacelet(facelets) == -1) {
+		if (this.cc.fromFacelet(facelets) === -1) {
 			return -1;
 		}
 		var sum = 0;
@@ -662,34 +662,34 @@ var min2phase = (function() {
 	}
 
 	Search.prototype.phase1PreMoves = function(maxl, lm, cc) {
-		if (maxl == this.maxPreMoves - 1 && (this.lastFilter >> lm & 1) != 0) {
+		if (maxl === this.maxPreMoves - 1 && (this.lastFilter >> lm & 1) != 0) {
 			return 1;
 		}
 		this.preMoveLen = this.maxPreMoves - maxl;
-		if (this.isRec ? (this.depth1 == this.length1 - this.preMoveLen) :
-			(this.preMoveLen == 0 || (0x36FB7 >> lm & 1) == 0)) {
+		if (this.isRec ? (this.depth1 === this.length1 - this.preMoveLen) :
+			(this.preMoveLen === 0 || (0x36FB7 >> lm & 1) === 0)) {
 			this.depth1 = this.length1 - this.preMoveLen;
 			this.phase1Cubie[0].init(cc.ca, cc.ea) /* = cc*/ ;
-			this.allowShorter = this.depth1 == MIN_P1LENGTH_PRE && this.preMoveLen != 0;
+			this.allowShorter = this.depth1 === MIN_P1LENGTH_PRE && this.preMoveLen != 0;
 
 			if (this.nodeUD[this.depth1 + 1].setWithPrun(cc, this.depth1) &&
-				this.phase1(this.nodeUD[this.depth1 + 1], this.depth1, -1) == 0) {
+				this.phase1(this.nodeUD[this.depth1 + 1], this.depth1, -1) === 0) {
 				return 0;
 			}
 		}
 
-		if (maxl == 0 || this.preMoveLen + MIN_P1LENGTH_PRE >= this.length1) {
+		if (maxl === 0 || this.preMoveLen + MIN_P1LENGTH_PRE >= this.length1) {
 			return 1;
 		}
 
 		var skipMoves = 0;
-		if (maxl == 1 || this.preMoveLen + 1 + MIN_P1LENGTH_PRE >= this.length1) { //last pre move
+		if (maxl === 1 || this.preMoveLen + 1 + MIN_P1LENGTH_PRE >= this.length1) { //last pre move
 			skipMoves |= 0x36FB7; // 11 0110 1111 1011 0111
 		}
 
 		lm = ~~(lm / 3) * 3;
 		for (var m = 0; m < 18; m++) {
-			if (m == lm || m == lm - 9 || m == lm + 9) {
+			if (m === lm || m === lm - 9 || m === lm + 9) {
 				m += 2;
 				continue;
 			}
@@ -700,7 +700,7 @@ var min2phase = (function() {
 			CubieCube.EdgeMult(moveCube[m], cc, this.preMoveCubes[maxl]);
 			this.preMoves[this.maxPreMoves - maxl] = m;
 			var ret = this.phase1PreMoves(maxl - 1, m, this.preMoveCubes[maxl]);
-			if (ret == 0) {
+			if (ret === 0) {
 				return 0;
 			}
 		}
@@ -715,17 +715,17 @@ var min2phase = (function() {
 				}
 				this.firstFilter = this.firstFilters[this.urfIdx];
 				this.lastFilter = this.lastFilters[this.urfIdx];
-				if (this.phase1PreMoves(this.maxPreMoves, -30, this.urfCubieCube[this.urfIdx], 0) == 0) {
-					return this.moveSol == null ? "Error 8" : this.moveSol;
+				if (this.phase1PreMoves(this.maxPreMoves, -30, this.urfCubieCube[this.urfIdx], 0) === 0) {
+					return this.moveSol === null ? "Error 8" : this.moveSol;
 				}
 			}
 		}
-		return this.moveSol == null ? "Error 7" : this.moveSol;
+		return this.moveSol === null ? "Error 7" : this.moveSol;
 	}
 
 	Search.prototype.initPhase2Pre = function() {
 		this.isRec = false;
-		if (this.probe >= (this.moveSol == null ? this.probeMax : this.probeMin)) {
+		if (this.probe >= (this.moveSol === null ? this.probeMax : this.probeMin)) {
 			return 0;
 		}
 		++this.probe;
@@ -737,7 +737,7 @@ var min2phase = (function() {
 		this.valid1 = this.depth1;
 
 		var ret = this.initPhase2(this.phase1Cubie[this.depth1]);
-		if (ret == 0 || this.preMoveLen == 0 || ret == 2) {
+		if (ret === 0 || this.preMoveLen === 0 || ret === 2) {
 			return ret;
 		}
 
@@ -791,11 +791,11 @@ var min2phase = (function() {
 		}
 	}
 	Search.prototype.phase1 = function(node, maxl, lm) {
-		if (maxl == this.depth1 - 1 && (this.firstFilter >> lm & 1) != 0) {
+		if (maxl === this.depth1 - 1 && (this.firstFilter >> lm & 1) != 0) {
 			return 1;
 		}
-		if (node.prun == 0 && maxl < 5) {
-			if (this.allowShorter || maxl == 0) {
+		if (node.prun === 0 && maxl < 5) {
+			if (this.allowShorter || maxl === 0) {
 				this.depth1 -= maxl;
 				var ret = this.initPhase2Pre();
 				this.depth1 += maxl;
@@ -805,7 +805,7 @@ var min2phase = (function() {
 			}
 		}
 		for (var axis = 0; axis < 18; axis += 3) {
-			if (axis == lm || axis == lm - 9) {
+			if (axis === lm || axis === lm - 9) {
 				continue;
 			}
 			for (var power = 0; power < 3; power++) {
@@ -818,7 +818,7 @@ var min2phase = (function() {
 				var prun = this.nodeUD[maxl].doMovePrun(node, m, true);
 				if (prun > maxl) {
 					break;
-				} else if (prun == maxl) {
+				} else if (prun === maxl) {
 					continue;
 				}
 
@@ -826,16 +826,16 @@ var min2phase = (function() {
 					prun = this.nodeUD[maxl].doMovePrunConj(node, m);
 					if (prun > maxl) {
 						break;
-					} else if (prun == maxl) {
+					} else if (prun === maxl) {
 						continue;
 					}
 				}
 				this.move[this.depth1 - maxl] = m;
 				this.valid1 = Math.min(this.valid1, this.depth1 - maxl);
 				var ret = this.phase1(this.nodeUD[maxl], maxl - 1, axis);
-				if (ret == 0) {
+				if (ret === 0) {
 					return 0;
-				} else if (ret == 2) {
+				} else if (ret === 2) {
 					break;
 				}
 			}
@@ -843,15 +843,15 @@ var min2phase = (function() {
 		return 1;
 	}
 	Search.prototype.appendSolMove = function(curMove) {
-		if (this.moveSol.length == 0) {
+		if (this.moveSol.length === 0) {
 			this.moveSol.push(curMove);
 			return;
 		}
 		var axisCur = ~~(curMove / 3);
 		var axisLast = ~~(this.moveSol[this.moveSol.length - 1] / 3);
-		if (axisCur == axisLast) {
+		if (axisCur === axisLast) {
 			var pow = (curMove % 3 + this.moveSol[this.moveSol.length - 1] % 3 + 1) % 4;
-			if (pow == 3) {
+			if (pow === 3) {
 				this.moveSol.pop();
 			} else {
 				this.moveSol[this.moveSol.length - 1] = axisCur * 3 + pow;
@@ -859,10 +859,10 @@ var min2phase = (function() {
 			return;
 		}
 		if (this.moveSol.length > 1 &&
-			axisCur % 3 == axisLast % 3 &&
-			axisCur == ~~(this.moveSol[this.moveSol.length - 2] / 3)) {
+			axisCur % 3 === axisLast % 3 &&
+			axisCur === ~~(this.moveSol[this.moveSol.length - 2] / 3)) {
 			var pow = (curMove % 3 + this.moveSol[this.moveSol.length - 2] % 3 + 1) % 4;
-			if (pow == 3) {
+			if (pow === 3) {
 				this.moveSol[this.moveSol.length - 2] = this.moveSol[this.moveSol.length - 1];
 				this.moveSol.pop();
 			} else {
@@ -873,10 +873,10 @@ var min2phase = (function() {
 		this.moveSol.push(curMove);
 	}
 	Search.prototype.phase2 = function(edge, esym, corn, csym, mid, maxl, depth, lm) {
-		if (this.depth1 == 0 && depth == 1 && (this.firstFilter >> ud2std[lm] & 1) != 0) {
+		if (this.depth1 === 0 && depth === 1 && (this.firstFilter >> ud2std[lm] & 1) != 0) {
 			return -1;
 		}
-		if (edge == 0 && corn == 0 && mid == 0 && (this.preMoveLen > 0 || (this.lastFilter >> ud2std[lm] & 1) == 0)) {
+		if (edge === 0 && corn === 0 && mid === 0 && (this.preMoveLen > 0 || (this.lastFilter >> ud2std[lm] & 1) === 0)) {
 			return maxl;
 		}
 		var moveMask = ckmv2bit[lm];
@@ -1010,12 +1010,12 @@ var min2phase = (function() {
 			CubieCube.CornMultFull(c, u4, d);
 			CubieCube.EdgeMult(c, u4, d);
 			c.init(d.ca, d.ea);
-			if (i % 4 == 3) {
+			if (i % 4 === 3) {
 				CubieCube.CornMultFull(c, lr2, d);
 				CubieCube.EdgeMult(c, lr2, d);
 				c.init(d.ca, d.ea);
 			}
-			if (i % 8 == 7) {
+			if (i % 8 === 7) {
 				CubieCube.CornMultFull(c, f2, d);
 				CubieCube.EdgeMult(c, f2, d);
 				c.init(d.ca, d.ea);
@@ -1051,7 +1051,7 @@ var min2phase = (function() {
 					SymMoveUD[s][std2ud[j]] = std2ud[m];
 					break;
 				}
-				if (s % 2 == 0) {
+				if (s % 2 === 0) {
 					Sym8Move[j << 3 | s >> 1] = SymMove[s][j];
 				}
 			}
@@ -1074,10 +1074,10 @@ var min2phase = (function() {
 				for (var s = 0; s < 16; s += sym_inc) {
 					conjFunc(c, s, d);
 					var idx = getFunc.call(d);
-					if (USE_TWST_FLIP_PRUN && coord == 0) {
+					if (USE_TWST_FLIP_PRUN && coord === 0) {
 						FlipS2RF[count << 3 | s >> 1] = idx;
 					}
-					if (idx == i) {
+					if (idx === i) {
 						SelfSym[count] |= 1 << (s / sym_inc);
 					}
 					Raw2Sym[idx] = (count << 4 | s) / sym_inc;
@@ -1163,21 +1163,21 @@ var min2phase = (function() {
 
 	function initRawSymPrun(PrunTable, N_RAW, N_SYM, RawMove, RawConj, SymMove, SelfSym, PrunFlag) {
 		var SYM_SHIFT = PrunFlag & 0xf;
-		var SYM_E2C_MAGIC = ((PrunFlag >> 4) & 1) == 1 ? 0x00DDDD00 : 0x00000000;
-		var IS_PHASE2 = ((PrunFlag >> 5) & 1) == 1;
+		var SYM_E2C_MAGIC = ((PrunFlag >> 4) & 1) === 1 ? 0x00DDDD00 : 0x00000000;
+		var IS_PHASE2 = ((PrunFlag >> 5) & 1) === 1;
 		var INV_DEPTH = PrunFlag >> 8 & 0xf;
 		var MAX_DEPTH = PrunFlag >> 12 & 0xf;
 		var MIN_DEPTH = PrunFlag >> 16 & 0xf;
 
 		var SYM_MASK = (1 << SYM_SHIFT) - 1;
-		var ISTFP = RawMove == null;
+		var ISTFP = RawMove === null;
 		var N_SIZE = N_RAW * N_SYM;
 		var N_MOVES = IS_PHASE2 ? 10 : 18;
-		var NEXT_AXIS_MAGIC = N_MOVES == 10 ? 0x42 : 0x92492;
+		var NEXT_AXIS_MAGIC = N_MOVES === 10 ? 0x42 : 0x92492;
 
 		var depth = getPruning(PrunTable, N_SIZE) - 1;
 
-		if (depth == -1) {
+		if (depth === -1) {
 			for (var i = 0; i < (N_SIZE >> 3) + 1; i++) {
 				PrunTable[i] = -1;
 			}
@@ -1201,7 +1201,7 @@ var min2phase = (function() {
 			var done = 0;
 			var val = 0;
 			for (var i = 0; i < N_SIZE; i++, val >>= 4) {
-				if ((i & 7) == 0) {
+				if ((i & 7) === 0) {
 					val = PrunTable[i >> 3];
 					if (!hasZero(val ^ selArrMask)) {
 						i += 7;
@@ -1257,7 +1257,7 @@ var min2phase = (function() {
 						} else {
 							idxx += RawConj[rawx << SYM_SHIFT | (j ^ (SYM_E2C_MAGIC >> (j << 1) & 3))];
 						}
-						if (getPruning(PrunTable, idxx) == check) {
+						if (getPruning(PrunTable, idxx) === check) {
 							setPruning(PrunTable, idxx, xorVal);
 							done++;
 						}
@@ -1317,7 +1317,7 @@ var min2phase = (function() {
 			initBasic();
 			InitPrunProgress = 0;
 		}
-		if (InitPrunProgress == 0) {
+		if (InitPrunProgress === 0) {
 			doInitPrunTables(99);
 		} else if (InitPrunProgress < 54) {
 			doInitPrunTables(InitPrunProgress);

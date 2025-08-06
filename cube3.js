@@ -33,7 +33,7 @@ class Cube3 {
         this.eKeysToPush = [];
         this.cKeysToPush = [];
         this.occupied = null;
-        this.congrated = localStorage.getItem('bld.congrates') == '1';
+        this.congrated = localStorage.getItem('bld.congrates') === '1';
 
         // Load settings
         const settingsStr = localStorage.getItem('bld.settings');
@@ -91,7 +91,7 @@ class Cube3 {
             for (let c2 of Cube3.cornCode.slice(3)) {
                 initStat(c1 + c2, 'par');
             }
-            if (Cube3.edgeCode[this.edgeIdx[c1] * 2] == c1) {
+            if (Cube3.edgeCode[this.edgeIdx[c1] * 2] === c1) {
                 initStat(c1 + '+', 'e+');
             }
         }
@@ -142,12 +142,12 @@ class Cube3 {
         let cubeArr = 'uuuuuuuuurrrrrrrrrfffffffffdddddddddlllllllllbbbbbbbbb'.split('');
         for (let bfCodeIdx = bfCode.length - 1; bfCodeIdx >= 0; bfCodeIdx--) {
             let c = bfCode[bfCodeIdx];
-            if (c == '+' || c == '-') {
+            if (c === '+' || c === '-') {
                 const c1 = bfCode[--bfCodeIdx];
                 if (this.isUpper(c1)) {
                     this.cycleCube(cubeArr, Cube3.edgeCode[this.edgeIdx[c1] * 2 + 1]);
                     this.cycleCube(cubeArr, c1);
-                } else if (c == '+') {
+                } else if (c === '+') {
                     this.cycleCube(cubeArr, Cube3.cornCode[this.cornIdx[c1] * 3 + 1]);
                     this.cycleCube(cubeArr, c1);
                 } else {
@@ -186,7 +186,7 @@ class Cube3 {
 
     updateStats(text) {
         text.split(';').forEach(item => {
-            if (item.trim().length == 0) return;
+            if (item.trim().length === 0) return;
             try {
                 const [key, value] = item.split('=');
                 const [times, mark] = value.split(',').map(Number);
@@ -200,7 +200,7 @@ class Cube3 {
     }
 
     isNonPro(key) {
-        return this.stats[key] && (this.stats[key].cat == 'e' || this.stats[key].cat == 'c');
+        return this.stats[key] && (this.stats[key].cat === 'e' || this.stats[key].cat === 'c');
     }
 
     sampleDict(dict, rd) {
@@ -215,12 +215,12 @@ class Cube3 {
     getWeight(key) {
         const stat = this.stats[key];
         if (!stat) return 0;
-        return stat.times == 0 ? this.learningRate : Math.pow(stat.times, -2 / (1 + (stat.mark + stat.more) * this.falloff));
+        return stat.times === 0 ? this.learningRate : Math.pow(stat.times, -2 / (1 + (stat.mark + stat.more) * this.falloff));
     }
 
     genCode(cat, maxCount, resList) {
         if (cat.endsWith('3')) {
-            let indices = [], ocStart = cat[0] == 'e' ? 0 : 12, ocCount = cat[0] == 'e' ? 12 : 8, gap = cat[0] == 'e' ? 2 : 3;
+            let indices = [], ocStart = cat[0] === 'e' ? 0 : 12, ocCount = cat[0] === 'e' ? 12 : 8, gap = cat[0] === 'e' ? 2 : 3;
             let idxPool = [...Array(ocCount).keys()].filter(ocIdx => !this.occupied[ocIdx + ocStart]);
             for (let idx = 0; idx < 3; idx++) {
                 let poolIdx = Math.random() * idxPool.length | 0;
@@ -229,7 +229,7 @@ class Cube3 {
                 idxPool.splice(poolIdx, 1);
             }
             indices.sort((a, b) => a - b);
-            let codePool = cat[0] == 'e' ? Cube3.edgeCode : Cube3.cornCode;
+            let codePool = cat[0] === 'e' ? Cube3.edgeCode : Cube3.cornCode;
             const codes = [codePool[indices[0] * gap], codePool[indices[1] * gap + (Math.random() * gap | 0)], codePool[indices[2] * gap + (Math.random() * gap | 0)]];
             resList.push(`${codes[0]}${codes[1]}${codes[2]}${codes[0]}`);
         }
@@ -238,7 +238,7 @@ class Cube3 {
             let tmpAlgs = [];
             let sumWeight = 0.0;
             for (let key in this.stats) {
-                if (this.stats[key].cat == cat) {
+                if (this.stats[key].cat === cat) {
                     sumWeight += weights[key] = this.getWeight(key);
                 }
             }
@@ -248,7 +248,7 @@ class Cube3 {
                     sumWeight -= weights[key];
                     delete weights[key];
                 });
-                if (Object.keys(weights).length == 0) break;
+                if (Object.keys(weights).length === 0) break;
                 let key = this.sampleDict(weights, Math.random() * sumWeight);
                 tmpAlgs.push(key);
                 key.split('').forEach(k => this.fullIdx[k] !== undefined && (this.occupied[this.fullIdx[k]] = true));
@@ -330,8 +330,8 @@ class Cube3 {
     }
 
     doCongrates() {
-        const numToLearn = Object.keys(this.stats).filter(key => this.isNonPro(key) && this.stats[key].times == 0).length;
-        if (numToLearn == 0 && !congrated) {
+        const numToLearn = Object.keys(this.stats).filter(key => this.isNonPro(key) && this.stats[key].times === 0).length;
+        if (numToLearn === 0 && !congrated) {
             congrated = true;
             localStorage.setItem('bld.congrates', '1');
             return true;
@@ -344,13 +344,13 @@ class Cube3 {
         this.cKeys.length = 0;
         this.displayKeys.length = 0;
         let cube;
-        if (this.mode == 'r' || this.mode == 'w') {
+        if (this.mode === 'r' || this.mode === 'w') {
             cube = min2phase.randomCube().toLowerCase();
         }
         else {
-            let modeRC = this.mode == "rc";
-            let scrambleE = this.mode == 'ec' || this.mode == 'e' || this.mode == 'rc';
-            let scrambleC = this.mode == 'ec' || this.mode == 'c' || this.mode == 'rc';
+            let modeRC = this.mode === "rc";
+            let scrambleE = this.mode === 'ec' || this.mode === 'e' || this.mode === 'rc';
+            let scrambleC = this.mode === 'ec' || this.mode === 'c' || this.mode === 'rc';
             this.occupied = Array(20).fill(false);
             this.occupied[0] = this.occupied[12] = true;
             let sfPar = [];
@@ -405,7 +405,7 @@ class Cube3 {
             }
         }
         let scr = min2phase.scramble(cube);
-        if (this.mode == 'w') {
+        if (this.mode === 'w') {
             // Maybe not the same as WCA scramble, but still a uniformly random state
             const randSuffix1 = Math.random() * 6 | 0, randSuffix2 = Math.random() * 4 | 0;
             scr += Cube3.bfSuffix1[randSuffix1] + Cube3.bfSuffix2[randSuffix2];

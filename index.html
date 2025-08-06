@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="./favicon.svg" type="image/x-icon">
-    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="favicon.svg" type="image/x-icon">
+    <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-status-bar-style" content="default">
     <meta name="mobile-web-app-title" content="3BLD">
@@ -404,7 +404,7 @@
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
+        navigator.serviceWorker.register('sw.js')
             .then((registration) => {
                 console.log('ServiceWorker registered with scope:', registration.scope);
             })
@@ -563,9 +563,9 @@ class Server {
         }
         this.getItem('alg', text => cube3.updateAlg(text), preferServer);
         this.getItem('mem', text => cube3.updateMem(text), preferServer);
-        this.getItem('e', text => cube3.updateStats(text), true);
-        this.getItem('c', text => cube3.updateStats(text), true);
-        this.getItem('settings', text => cube3.updateSettings(JSON.parse(text)), true);
+        this.getItem('e', text => cube3.updateStats(text), preferServer);
+        this.getItem('c', text => cube3.updateStats(text), preferServer);
+        this.getItem('settings', text => cube3.updateSettings(JSON.parse(text)), preferServer);
     }
     
     saveStats() {
@@ -621,7 +621,7 @@ class ButtonRow {
             if (cube3.stats[text].mark > 0) {
                 button.classList.add('non-zero-mark');
             }
-            if (cube3.stats[text].times == 0) {
+            if (cube3.stats[text].times === 0) {
                 button.classList.add('new-mark');
             } else if (cube3.stats[text].more > 0) {
                 button.classList.add('subset-mark');
@@ -815,7 +815,7 @@ function saveServerSettings() {
 }
     
 function toggleServerPanel() {
-    if (document.getElementById('server-panel').style.display == 'flex') {
+    if (document.getElementById('server-panel').style.display === 'flex') {
         document.getElementById('server-panel').style.display = 'none';
     }
     else {
@@ -861,10 +861,10 @@ document.addEventListener('keydown', function(event) {
         return;
     }
     if (event.key === 'Escape') {
-        if (document.getElementById('settings-panel').style.display == 'flex') {
+        if (document.getElementById('settings-panel').style.display === 'flex') {
             toggleSettingsPanel();
         }
-        else if (document.getElementById('server-panel').style.display == 'flex') {
+        else if (document.getElementById('server-panel').style.display === 'flex') {
             toggleServerPanel();
         }
         else if (textInput.focus) {
@@ -877,8 +877,8 @@ document.addEventListener('keydown', function(event) {
         toggleSettingsPanel();
         return;
     }
-    if (document.getElementById('settings-panel').style.display == 'flex' || 
-        document.getElementById('server-panel').style.display == 'flex') {
+    if (document.getElementById('settings-panel').style.display === 'flex' || 
+        document.getElementById('server-panel').style.display === 'flex') {
         return;
     }
     if (event.key === ' ' && textInput !== document.activeElement && timer.enabled) {
@@ -916,7 +916,7 @@ document.addEventListener('keydown', function(event) {
         cmd = textInput.value.trim();
         textInput.value = '';
         textInput.blur();
-        if (cmd.length == 0) return;
+        if (cmd.length === 0) return;
         if (cmd[0] === '.') {
             let key = cmd.substring(1).trimStart();
             if (cube3.stats[key]) {
@@ -978,7 +978,7 @@ document.addEventListener('keydown', function(event) {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    server.loadData(); // No need to wait for now
+    server.loadData();
     newScramble();
 });
 

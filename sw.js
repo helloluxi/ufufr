@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nada';
+const CACHE_NAME = 'ufufr-cache';
 const urlsToCache = [
     './',
     './index.html',
