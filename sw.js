@@ -7,43 +7,59 @@ const urlsToCache = [
     './cube3.js',
     './manifest.json'
 ];
+const cachedServerEndpoints = ['mem', 'alg'];
+
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => {
-                return cache.addAll(urlsToCache);
-            })
+            .then(cache => cache.addAll(urlsToCache))
     );
 });
+
 self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                return response || fetch(event.request);
-            })
+    const url = new URL(event.request.url);
+    const isServerRequest = cachedServerEndpoints.some(endpoint => 
+        url.pathname.endsWith(`/${endpoint}`)
     );
-});
-self.addEventListener('activate', event => {
-    const cacheWhitelist = [CACHE_NAME];
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cache => {
-                    if (!cacheWhitelist.includes(cache)) {
-                        return caches.delete(cache);
-                    }
+    
+    if (isServerRequest) {
+        event.respondWith(
+            caches.open(CACHE_NAME).then(cache => 
+                cache.match(event.request).then(cachedResponse => {
+                    const fetchPromise = fetch(event.request).then(response => {
+                        if (response.ok) {
+                            cache.put(event.request, response.clone());
+                        }
+                        return response;
+                    });
+                    return cachedResponse || fetchPromise;
                 })
-            );
-        })
+            )
+        );
+    } else {
+        event.respondWith(
+            caches.match(event.request).then(response => 
+                response || fetch(event.request)
+            )
+        );
+    }
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => 
+            Promise.all(
+                cacheNames.map(cache => 
+                    cache !== CACHE_NAME ? caches.delete(cache) : null
+                )
+            )
+        )
     );
 });
+
 self.addEventListener('message', event => {
     if (event.data === 'ud') {
-      caches.open(CACHE_NAME).then(cache => {
-        urlsToCache.forEach(url => {
-          fetch(url).then(response => cache.put(url, response));
-        });
-      });
+        caches.delete(CACHE_NAME);
     }
-  });
+});
   

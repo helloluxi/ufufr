@@ -401,19 +401,6 @@
         <button id="back-button" onclick="toggleServerPanel()">Close</button>
     </div>
 
-<script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then((registration) => {
-                console.log('ServiceWorker registered with scope:', registration.scope);
-            })
-            .catch((error) => {
-                console.error('ServiceWorker registration failed:', error);
-            });
-    });
-}
-</script>
 <script src="min2phase.js"></script>
 <script src="cube3.js"></script>
 <script>
@@ -513,30 +500,34 @@ class DrawCube {
 }
 
 // Server class for handling server interactions
-class Server {
+class ServerHandler {
     constructor() {
         this.serverUrl = localStorage.getItem('bld.serverUrl') || '';
         this.serverPassword = localStorage.getItem('bld.serverPswd') || '';
     }
     
-    getItem(key, func, preferServer = false) {
-        let savedItem = localStorage.getItem(`bld.${key}`);
-        if (this.serverUrl && (!savedItem || preferServer)) {
-            fetch(`${this.serverUrl}/${key}`)
-            .then(response => response.text())
-            .then(text => {
-                savedItem = text;
-                localStorage.setItem(`bld.${key}`, text);
-            }).catch(err => {
-                print(`Error: ${err}`);
-            });
+    async getItem(key, func) {
+        if (this.serverUrl) {
+            try {
+                const response = await fetch(`${this.serverUrl}/${key}`);
+                if (response.ok) {
+                    const text = await response.text();
+                    localStorage.setItem(`bld.${key}`, text);
+                    func(text);
+                    return;
+                }
+            } catch (err) {
+                print(`[${key}] ${err}`);
+            }
         }
+        
+        const savedItem = localStorage.getItem(`bld.${key}`);
         if (savedItem) {
             func(savedItem);
         }
     }
     
-    push(key, value) {
+    push(cat, text) {
         if (!this.serverUrl || !this.serverPassword) return;
         fetch(`${this.serverUrl}`, {
             method: 'POST',
@@ -544,8 +535,8 @@ class Server {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                key,
-                value,
+                key: cat,
+                value: text,
                 pswd: this.serverPassword
             })
         }).then(response => {
@@ -553,22 +544,36 @@ class Server {
                 print(`Failed to push: ${response.status} ${response.statusText}`);
             }
         }).catch(err => {
-            print(`Error pushing ${key}: ${err}`);
+            print(`Error pushing ${cat}: ${err}`);
         });
     }
+
+    pushAll() {
+        this.push('e', cube3.stats.filter(x => x.cat.startsWith('e'))
+            .map(x => `${x.key}=${x.times},${x.mark}`).join(';'));
+        this.push('c', cube3.stats.filter(x => x.cat.startsWith('c'))
+            .map(x => `${x.key}=${x.times},${x.mark}`).join(';'));
+    }
     
-    loadData(preferServer = false) {
+    async loadData() {
         if (!this.serverUrl) {
             print('No server.');
         }
-        this.getItem('alg', text => cube3.updateAlg(text), preferServer);
-        this.getItem('mem', text => cube3.updateMem(text), preferServer);
-        this.getItem('e', text => cube3.updateStats(text), preferServer);
-        this.getItem('c', text => cube3.updateStats(text), preferServer);
-        this.getItem('settings', text => cube3.updateSettings(JSON.parse(text)), preferServer);
+        
+        await this.getItem('alg', text => cube3.updateAlg(text));
+        await this.getItem('mem', text => cube3.updateMem(text));
+        await this.getItem('e', text => cube3.updateStats(text));
+        await this.getItem('c', text => cube3.updateStats(text));
+        await this.getItem('settings', text => {
+            try {
+                cube3.updateSettings(JSON.parse(text));
+            } catch (err) {
+                console.log('Failed to parse settings:', err);
+            }
+        });
     }
     
-    saveStats() {
+    savePushClear() {
         this.push('e', cube3.eKeysToPush.map(x => 
             `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
         ).join(';'));
@@ -576,7 +581,7 @@ class Server {
             `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
         ).join(';'));
         cube3.clearKeysToPush();
-        // Save to Local Stotage
+        // Save to Local Storage
         let eStats = [], cStats = [];
         Object.keys(cube3.stats).forEach(x => {
             const whichStats = cube3.stats[x].cat.startsWith('c') ? cStats : eStats;
@@ -743,7 +748,7 @@ class Timer {
 
 const cube3 = new Cube3();
 const drawCube = new DrawCube('rubiksCubeContainer');
-const server = new Server();
+const server = new ServerHandler();
 const buttonRow = new ButtonRow('.button-row');
 const timer = new Timer('canvas', 'timer-container', 'timer-display', 'command-output');
 let scrElem = document.querySelector('.title');
@@ -809,7 +814,7 @@ function saveServerSettings() {
     server.serverPassword = _serverPassword;
     localStorage.setItem('bld.serverUrl', server.serverUrl);
     localStorage.setItem('bld.serverPswd', server.serverPassword);
-    server.loadData(true);
+    server.loadData();
     toggleServerPanel();
     forceUpdate();
 }
@@ -836,7 +841,7 @@ function onClickNext() {
         print(`Add marks: ${cube3.getAllKeysToPush().map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
     }
     cube3.addTimes();
-    server.saveStats();
+    server.savePushClear();
     newScramble();
 }
 
@@ -932,12 +937,12 @@ document.addEventListener('keydown', function(event) {
             const keys = cmd.substring(1).trimStart().split(' ');
             cube3.addMark(keys);
             print(`Add marks: ${cube3.getAllKeysToPush().map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
-            server.saveStats();
+            server.savePushClear();
         } else if (cmd[0] === '-') {
             const keys = cmd.substring(1).trimStart().split(' ');
             cube3.removeMark(keys);
             print(`Remove marks: ${cube3.getAllKeysToPush().map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
-            server.saveStats();
+            server.savePushClear();
         } else {
             cmd = cmd.toLowerCase();
             if (cmd === 'alg') {
@@ -956,8 +961,10 @@ document.addEventListener('keydown', function(event) {
                     .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
                 print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
             } else if (cmd === 'ud') {
-                server.loadData(true);
+                server.loadData();
                 forceUpdate();
+            } else if (cmd === 'ul') {
+                server.pushAll();
             } else if (cmd.startsWith('mode')) {
                 const modeStr = cmd.substring(4).trim();
                 if (['rc', 'ec', 'e', 'c', 'r', 'w'].includes(modeStr)) {
@@ -977,10 +984,22 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    server.loadData();
+document.addEventListener('DOMContentLoaded', async () => {
+    await server.loadData();
     newScramble();
 });
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then((registration) => {
+                console.log('ServiceWorker registered with scope:', registration.scope);
+            })
+            .catch((error) => {
+                console.error('ServiceWorker registration failed:', error);
+            });
+    });
+}
 
 </script>
 </body>
