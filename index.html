@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.svg" type="image/x-icon">
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-title" content="3BLD">
+    <title>3BLD</title>
+    <style>
+        :root {
+            --bg-primary: #2c2c2c;
+            --bg-secondary: #333;
+            --bg-tertiary: rgba(30,30,30,0.95);
+            --text-primary: #E0E0E0;
+            --text-secondary: #f0f0f0;
+            --text-muted: #888;
+            --border-primary: #444;
+            --border-secondary: #555;
+            --accent-primary: #41aaff;
+            --accent-secondary: #0088cc;
+            --accent-blue: #0022ff;
+            --accent-orange: #ff8800;
+            --accent-green: #00ff00;
+            --accent-hover: #33ccff;
+            --success: #4CAF50;
+            --white: #fff;
+            --shadow: rgba(0,0,0,0.2);
+            --shadow-strong: rgba(0,0,0,0.5);
+        }
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        .title {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 2em;
+        }
+        .canvas {
+            display: flex;
+            justify-content: center;
+            flex-grow: 1;
+            align-items: center;
+        }
+        .bottom {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px;
+        }
+        .command-input, .text-output {
+            width: 49%;
+        }
+        .command-input input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary);
+        }
+        .command-input input::placeholder {
+            color: var(--text-muted);
+        }
+        .text-output div {
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: transparent;
+            color: var(--text-primary);
+            border: none;
+        }
+        .toggle-btn {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary);
+            padding: 10px;
+            margin: 5px 5px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+        .toggle-btn.active {
+            background-color: var(--accent-primary);
+            border: 1px solid var(--accent-secondary);
+            box-shadow: 0 0 12px rgba(0, 180, 255, 0.5);
+            color: var(--white);
+        }
+        .toggle-btn.new-mark::after {
+            content: '';
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid var(--accent-orange);
+            border-bottom: 4px solid transparent;
+            border-top: 4px solid var(--accent-orange);
+        }
+        .toggle-btn.subset-mark::after {
+            content: '';
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid var(--accent-blue);
+            border-bottom: 4px solid transparent;
+            border-top: 4px solid var(--accent-blue);
+        }
+        .toggle-btn.non-zero-mark::after {
+            content: '';
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid var(--accent-green);
+            border-right: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            border-top: 4px solid var(--accent-green);
+        }
+        .hover-text {
+            position: absolute;
+            text-align: left;
+            top: 100%;
+            left: 0;
+            width: max-content;
+            max-width: 250px;
+            background-color: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-secondary);
+            border-radius: 4px;
+            padding: 8px;
+            z-index: 10;
+            box-shadow: 0 2px 5px var(--shadow);
+            display: none;
+        }
+        .toggle-btn:hover .hover-text {
+            display: block;
+        }
+        #nextButton {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary);
+            padding: 10px;
+            margin: 20px;
+            cursor: pointer;
+        }
+        #menu-icon div {
+            width: 25px;
+            height: 3px;
+            background-color: var(--white);
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+        #menu-icon {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        #settings-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 500px;
+            background-color: var(--bg-tertiary);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px var(--shadow-strong);
+            display: none;
+            flex-direction: column;
+            padding: 30px;
+            z-index: 2000;
+        }
+        #settings-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 5px;
+        }
+        #settings-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        #settings-content::-webkit-scrollbar-thumb {
+            background-color: var(--border-secondary);
+            border-radius: 4px;
+        }
+        #settings-content::-webkit-scrollbar-thumb:hover {
+            background-color: #777;
+        }
+        .setting {
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .setting label {
+            color: var(--text-primary);
+        }
+        .setting input[type="checkbox"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background-color: var(--bg-secondary);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+        .setting input[type="checkbox"]:checked {
+            background-color: var(--success);
+        }
+        .setting input[type="checkbox"]:checked::after {
+            content: '✔';
+            color: var(--white);
+            font-size: 16px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .setting input[type="range"] {
+            width: 150px;
+            accent-color: var(--success);
+        }
+        .setting select {
+            width: 150px;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: var(--bg-secondary);
+            color: var(--white);
+            border: 1px solid var(--border-secondary);
+        }
+        .slider-value {
+            width: 40px;
+            text-align: right;
+        }
+        #back-button {
+            position: relative;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: var(--bg-secondary);
+            color: var(--white);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        #back-button:hover {
+            background-color: var(--border-primary);
+        }
+        #timer-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-primary);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            cursor: pointer;
+        }
+        #timer-display {
+            font-size: 12em;
+            font-weight: bold;
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        #server-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 250px;
+            background-color: var(--bg-tertiary);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px var(--shadow-strong);
+            display: none;
+            flex-direction: column;
+            padding: 30px;
+            z-index: 2000;
+        }
+        .server-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title" ondblclick="toggleSettingsPanel()">Generating Scramble...</div>
+    <div id="settings-panel">
+        <div id="settings-content">
+            <div class="setting">
+                <label for="mode-select">Mode</label>
+                <select id="mode-select" onchange="saveSettings(true)">
+                    <option value="rc">Random + Corner</option>
+                    <option value="ec">Edge + Corner</option>
+                    <option value="e">Edge</option>
+                    <option value="c">Corner</option>
+                    <option value="r">Random</option>
+                    <option value="w">WCA</option>
+                </select>
+            </div>
+            <div class="setting">
+                <label for="parity-ckbx">Parity</label>
+                <input type="checkbox" id="parity-ckbx" onchange="saveSettings(true)" />
+            </div>
+            <div class="setting">
+                <label for="timer-ckbx">Timer</label>
+                <input type="checkbox" id="timer-ckbx" checked onchange="saveSettings()" />
+            </div>
+            <div class="setting">
+                <label for="mm-ckbx">Subset Training</label>
+                <input type="checkbox" id="mm-ckbx" checked onchange="saveSettings()" />
+            </div>
+            <div class="setting">
+                <label for="lr-slider" style="width: 200px;">Learning Rate</label>
+                <input type="range" min="0.01" max="1" value="0.1" step="0.03" id="lr-slider" onchange="saveSettings()" oninput="document.getElementById('lr-value').innerText = this.value" />
+                <span id="lr-value" class="slider-value">0.1</span>
+            </div>
+            <div class="setting">
+                <label for="ff-slider" style="width: 200px;">Fall Off Rate</label>
+                <input type="range" min="0.1" max="2" value="1" step="0.1" id="ff-slider" onchange="saveSettings()" oninput="document.getElementById('ff-value').innerText = this.value" />
+                <span id="ff-value" class="slider-value">1</span>
+            </div>
+            <div class="setting">
+                <label for="ft-slider" style="width: 200px;">Flip/Twist</label>
+                <input type="range" min="0" max="1" value="0" step="0.1" id="ft-slider" onchange="saveSettings()" oninput="document.getElementById('ft-value').innerText = this.value" />
+                <span id="ft-value" class="slider-value">0</span>
+            </div>
+            <div class="setting">
+                <label for="ft2-slider" style="width: 200px;">3-Twist</label>
+                <input type="range" min="0" max="1" value="0" step="0.1" id="ft2-slider" onchange="saveSettings()" oninput="document.getElementById('ft2-value').innerText = this.value" />
+                <span id="ft2-value" class="slider-value">0</span>
+            </div>
+            <div class="setting">
+                <label for="fl-slider" style="width: 200px;">Float</label>
+                <input type="range" min="0" max="1" value="0" step="0.1" id="fl-slider" onchange="saveSettings()" oninput="document.getElementById('fl-value').innerText = this.value" />
+                <span id="fl-value" class="slider-value">0</span>
+            </div>
+            <div id="tiny-line" style="text-align: center; color: #E0E0E0; font-size: 0.8em; margin: 10px 0;"></div>
+        </div>
+        <button id="back-button" onclick="toggleServerPanel()">Server</button>
+        <button id="back-button" onclick="toggleSettingsPanel()">Back</button>
+    </div>
+    <div class="canvas" id="canvas">
+        <div id="rubiksCubeContainer"></div>
+    </div>
+    <div class="button-row" style="text-align: center; margin-bottom: 10px;">
+        <button id="nextButton">Next &rarr;</button>
+    </div>
+    <div class="bottom">
+        <div class="command-input">
+            <input type="text" id="command-input" placeholder="Enter command..." autocomplete="off">
+        </div>
+        <div class="text-output">
+            <div id="command-output">Command output...</div>
+        </div>
+    </div>
+    
+    <div id="timer-container">
+        <div id="timer-display">0.00</div>
+    </div>
+
+    <div id="server-panel">
+        <input type="text" id="server-url" class="server-input" placeholder="Server URL">
+        <input type="password" id="server-password" class="server-input" placeholder="Password">
+        <div class="setting"></div>
+        <button id="back-button" onclick="saveServerSettings()">Save</button>
+        <button id="back-button" onclick="toggleServerPanel()">Close</button>
+    </div>
+
+<script src="min2phase.js"></script>
+<script src="cube3.js"></script>
+<script>
+
+function print(str){
+    document.querySelector('.text-output div').innerText = str;
+}
+
+function printAdd(str){
+    document.querySelector('.text-output div').innerText += str;
+}
+
+function forceUpdate() {
+    if (navigator.serviceWorker.controller){
+        navigator.serviceWorker.controller.postMessage('ud');
+    } else {
+        print('Service worker not ready.');
+    }
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+// DrawCube class for handling cube visualization
+class DrawCube {
+    constructor(containerId) {
+        this.colorMapping = {
+            'd': '#FFFFFF', // White
+            'u': '#FFFF00', // Yellow
+            'f': '#FF0000', // Red
+            'b': '#FFA500', // Orange
+            'l': '#0000FF', // Blue
+            'r': '#00FF00'  // Green
+        };
+        
+        this.size = 40;
+        this.faceSize = 3 * this.size + 10;
+        this.svgNS = "http://www.w3.org/2000/svg";
+        this.pieces = [];
+        
+        this.initializeCube(containerId);
+        this.setupEventListeners();
+    }
+    
+    initializeCube(containerId) {
+        this.svg = document.createElementNS(this.svgNS, "svg");
+        this.svg.setAttribute("width", this.faceSize * 4);
+        this.svg.setAttribute("height", this.faceSize * 3);
+        this.svg.setAttribute("viewBox", `0 0 ${this.faceSize * 4} ${this.faceSize * 3}`);
+        
+        // Draw all faces
+        this.drawFace(1, 0); // Top
+        this.drawFace(2, 1); // Right
+        this.drawFace(1, 1); // Front
+        this.drawFace(1, 2); // Bottom
+        this.drawFace(0, 1); // Left
+        this.drawFace(3, 1); // Back
+        
+        document.getElementById(containerId).appendChild(this.svg);
+    }
+    
+    drawFace(xx, yy) {
+        const startX = xx * this.faceSize;
+        const startY = yy * this.faceSize;
+        
+        for (let i = 0; i < 9; i++) {
+            const x = startX + (i % 3) * this.size;
+            const y = startY + Math.floor(i / 3) * this.size;
+
+            const rect = document.createElementNS(this.svgNS, "rect");
+            rect.setAttribute("x", x);
+            rect.setAttribute("y", y);
+            rect.setAttribute("width", this.size);
+            rect.setAttribute("height", this.size);
+            rect.setAttribute("stroke", "#000000");
+
+            this.pieces.push(rect);
+            this.svg.appendChild(rect);
+        }
+    }
+    
+    updatePieceColors(str) {
+        for (let i = 0; i < str.length; i++) {
+            this.pieces[i].setAttribute("fill", this.colorMapping[str[i]]);
+        }
+    }
+    
+    resizeCanvas() {
+        let s = Math.min(window.innerWidth / 4 - 20, this.faceSize) / this.faceSize;
+        this.svg.style.transform = `scale(${s})`;
+    }
+    
+    setupEventListeners() {
+        window.addEventListener('resize', () => this.resizeCanvas());
+        window.addEventListener('load', () => this.resizeCanvas());
+    }
+}
+
+// Server class for handling server interactions
+class ServerHandler {
+    constructor() {
+        this.serverUrl = localStorage.getItem('bld.serverUrl') || '';
+        this.serverPassword = localStorage.getItem('bld.serverPswd') || '';
+    }
+    
+    async getItem(key, func) {
+        if (this.serverUrl) {
+            try {
+                const response = await fetch(`${this.serverUrl}/${key}`);
+                if (response.ok) {
+                    const text = await response.text();
+                    localStorage.setItem(`bld.${key}`, text);
+                    func(text);
+                    return;
+                }
+            } catch (err) {
+                print(`[${key}] ${err}`);
+            }
+        }
+        
+        const savedItem = localStorage.getItem(`bld.${key}`);
+        if (savedItem) {
+            func(savedItem);
+        }
+    }
+    
+    push(cat, text) {
+        if (!this.serverUrl || !this.serverPassword) return;
+        fetch(`${this.serverUrl}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                key: cat,
+                value: text,
+                pswd: this.serverPassword
+            })
+        }).then(response => {
+            if (!response.ok) {
+                print(`Failed to push: ${response.status} ${response.statusText}`);
+            }
+        }).catch(err => {
+            print(`Error pushing ${cat}: ${err}`);
+        });
+    }
+
+    pushAll() {
+        this.push('e', cube3.stats.filter(x => x.cat.startsWith('e'))
+            .map(x => `${x.key}=${x.times},${x.mark}`).join(';'));
+        this.push('c', cube3.stats.filter(x => x.cat.startsWith('c'))
+            .map(x => `${x.key}=${x.times},${x.mark}`).join(';'));
+    }
+    
+    async loadData() {
+        if (!this.serverUrl) {
+            print('No server.');
+        }
+        
+        await this.getItem('alg', text => cube3.updateAlg(text));
+        await this.getItem('mem', text => cube3.updateMem(text));
+        await this.getItem('e', text => cube3.updateStats(text));
+        await this.getItem('c', text => cube3.updateStats(text));
+        await this.getItem('settings', text => {
+            try {
+                cube3.updateSettings(JSON.parse(text));
+            } catch (err) {
+                console.log('Failed to parse settings:', err);
+            }
+        });
+    }
+    
+    savePushClear() {
+        this.push('e', cube3.eKeysToPush.map(x => 
+            `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
+        ).join(';'));
+        this.push('c', cube3.cKeysToPush.map(x => 
+            `${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`
+        ).join(';'));
+        cube3.clearKeysToPush();
+        // Save to Local Storage
+        let eStats = [], cStats = [];
+        Object.keys(cube3.stats).forEach(x => {
+            const whichStats = cube3.stats[x].cat.startsWith('c') ? cStats : eStats;
+            whichStats.push(`${x}=${cube3.stats[x].times},${cube3.stats[x].mark}`);
+        });
+        localStorage.setItem('bld.e', eStats.join(';'));
+        localStorage.setItem('bld.c', cStats.join(';'));
+    }
+}
+
+// ButtonRow class for handling button interactions
+class ButtonRow {
+    constructor(containerSelector) {
+        this.buttonRow = document.querySelector(containerSelector);
+        this.nextButtonHtml = '<button id="nextButton" onclick="onClickNext()">Next &rarr;</button>';
+    }
+    
+    showHoverText(event) {
+        const hoverText = document.createElement('div');
+        hoverText.className = 'hover-text';
+        hoverText.innerHTML = cube3.getAlgInfo(event.target.textContent).join('<br>');
+        event.target.appendChild(hoverText);
+    }
+    
+    hideHoverText(event) {
+        const hoverText = event.target.querySelector('.hover-text');
+        if (hoverText) {
+            event.target.removeChild(hoverText);
+        }
+    }
+    
+    generateButton(text) {
+        const button = document.createElement('button');
+        button.textContent = text;
+        button.className = 'toggle-btn';
+        
+        if (cube3.stats[text]) {
+            button.onclick = function() { this.classList.toggle('active'); };
+            button.addEventListener('mouseover', (e) => this.showHoverText(e));
+            button.addEventListener('mouseout', (e) => this.hideHoverText(e));
+            
+            if (cube3.stats[text].mark > 0) {
+                button.classList.add('non-zero-mark');
+            }
+            if (cube3.stats[text].times === 0) {
+                button.classList.add('new-mark');
+            } else if (cube3.stats[text].more > 0) {
+                button.classList.add('subset-mark');
+            }
+        }
+        return button;
+    }
+    
+    resetButtons() {
+        this.buttonRow.innerHTML = '';
+        cube3.displayKeys.forEach(code => this.buttonRow.appendChild(this.generateButton(code)));
+        this.buttonRow.appendChild(document.createElement('button')).outerHTML = this.nextButtonHtml;
+    }
+}
+
+// Timer class for handling timing functionality
+class Timer {
+    constructor(canvasId, timerContainerId, timerDisplayId, commandOutputId) {
+        this.enabled = localStorage.getItem('bld.timer') !== 'false';
+        this.canvas = document.getElementById(canvasId);
+        this.timerContainer = document.getElementById(timerContainerId);
+        this.timerDisplay = document.getElementById(timerDisplayId);
+        this.commandOutput = document.getElementById(commandOutputId);
+        this.timerInterval = null;
+        this.startTime = null;
+        this.longPressTimer = null;
+        this.isTimerRunning = false;
+        this.pressStarted = false;
+        this.finalTimeStr = '*';
+        this.nowTimeStr = '*';
+        
+        this.setupEventListeners();
+    }
+
+    setEnabled(enabled) {
+        this.enabled = enabled;
+        localStorage.setItem('bld.timer', enabled);
+    }
+    
+    formatTime(time) {
+        const seconds = (time / 1000) | 0;
+        const milliseconds = ((time % 1000) / 10) | 0;
+        return `${seconds}.${milliseconds.toString().padStart(2, '0')}`;
+    }
+    
+    startTimer() {
+        if (!timer.enabled) return;
+        this.isTimerRunning = true;
+        this.startTime = new Date().getTime();
+        this.timerInterval = setInterval(() => {
+            const currentTime = new Date().getTime() - this.startTime;
+            this.timerDisplay.textContent = this.formatTime(currentTime);
+        }, 37);
+    }
+    
+    stopTimer() {
+        if (this.isTimerRunning) {
+            const now = new Date();
+            const finalTime = now.getTime() - this.startTime;
+            if (finalTime < 200) return;
+            clearInterval(this.timerInterval);
+            this.finalTimeStr = this.formatTime(finalTime);
+            this.nowTimeStr = now.toLocaleString('sv-SE').replace('T', ' ');
+            this.commandOutput.textContent = `Time: ${this.finalTimeStr}`;
+            this.isTimerRunning = false;
+        }
+        this.timerContainer.style.display = 'none';
+    }
+    
+    prepareTimer() {
+        if (!timer.enabled) return;
+        this.timerContainer.style.display = 'flex';
+        this.timerDisplay.textContent = '0.00';
+    }
+    
+    startLongPress() {
+        if (!timer.enabled) return false;
+        this.pressStarted = true;
+        this.longPressTimer = setTimeout(() => {
+            this.prepareTimer();
+        }, 500);
+        return true;
+    }
+    
+    endPress() {
+        if (this.pressStarted) {
+            clearTimeout(this.longPressTimer);
+            if (this.timerContainer.style.display === 'flex' && !this.isTimerRunning) {
+                this.startTimer();
+            }
+            this.pressStarted = false;
+        }
+    }
+    
+    handleBlur() {
+        if (this.pressStarted) {
+            clearTimeout(this.longPressTimer);
+            this.pressStarted = false;
+            this.stopTimer();
+        }
+    }
+    
+    setupEventListeners() {
+        this.canvas.addEventListener('mousedown', () => this.startLongPress());
+        document.addEventListener('mouseup', () => this.endPress());
+        this.canvas.addEventListener('touchstart', () => this.startLongPress());
+        document.addEventListener('touchend', () => this.endPress());
+        document.addEventListener('touchcancel', () => this.handleBlur());
+        this.timerContainer.addEventListener('mousedown', () => this.stopTimer());
+        this.timerContainer.addEventListener('touchstart', () => this.stopTimer());
+        window.addEventListener('blur', () => this.handleBlur());
+          document.addEventListener('keyup', (e) => {
+            if (e.key === ' ' && textInput !== document.activeElement && timer.enabled && !this.isTimerRunning) {
+                this.endPress();
+            }
+        });
+    }
+}
+
+const cube3 = new Cube3();
+const drawCube = new DrawCube('rubiksCubeContainer');
+const server = new ServerHandler();
+const buttonRow = new ButtonRow('.button-row');
+const timer = new Timer('canvas', 'timer-container', 'timer-display', 'command-output');
+let scrElem = document.querySelector('.title');
+
+function toggleSettingsPanel() {
+    const serverPanel = document.getElementById('server-panel');
+    if (serverPanel.style.display === 'flex') {
+        toggleServerPanel();
+        return;
+    }
+    const panel = document.getElementById('settings-panel');
+    panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+    if (panel.style.display === 'flex') {
+        document.getElementById('mode-select').value = cube3.mode;
+        document.getElementById('parity-ckbx').checked = cube3.usePar;
+        document.getElementById('mm-ckbx').checked = cube3.mm > 0;
+        document.getElementById('ft-slider').value = cube3.ftWeight;
+        document.getElementById('ft2-slider').value = cube3.ft2Weight;
+        document.getElementById('fl-slider').value = cube3.flWeight;
+        document.getElementById('lr-slider').value = cube3.learningRate;
+        document.getElementById('ff-slider').value = cube3.falloff;
+        document.getElementById('ft-value').innerText = cube3.ftWeight;
+        document.getElementById('ft2-value').innerText = cube3.ft2Weight;
+        document.getElementById('fl-value').innerText = cube3.flWeight;
+        document.getElementById('lr-value').innerText = cube3.learningRate;
+        document.getElementById('ff-value').innerText = cube3.falloff;
+        document.getElementById('timer-ckbx').checked = timer.enabled;
+        
+        let filtered = Object.keys(cube3.stats).filter(key => cube3.isNonPro(key) && cube3.stats[key].times > 0);
+        let progress = filtered.length;
+        let totalTimes = filtered.reduce((acc, key) => acc + cube3.stats[key].times, 0);
+        let totalMarks = filtered.reduce((acc, key) => acc + cube3.stats[key].mark, 0);
+        document.getElementById('tiny-line').innerText = `Progress=${progress}/818 (${(100 * progress / 818).toFixed(2)}%)
+            Avg Times=${(totalTimes / progress).toFixed(2)}
+            Avg Marks=${(totalMarks / progress).toFixed(2)}`;
+    }
+}
+
+function saveSettings(genScr=false) {
+    timer.setEnabled(document.getElementById('timer-ckbx').checked);
+    const newSettings = {
+        mode: document.getElementById('mode-select').value,
+        usePar: document.getElementById('parity-ckbx').checked,
+        mm: document.getElementById('mm-ckbx').checked ? 4 : 0,
+        ftWeight: parseFloat(document.getElementById('ft-slider').value),
+        ft2Weight: parseFloat(document.getElementById('ft2-slider').value),
+        flWeight: parseFloat(document.getElementById('fl-slider').value),
+        learningRate: parseFloat(document.getElementById('lr-slider').value),
+        falloff: parseFloat(document.getElementById('ff-slider').value)
+    };
+    console.log('Settings:', newSettings);
+    cube3.updateSettings(newSettings);
+    server.push('settings', JSON.stringify(newSettings));
+    if (genScr) newScramble();
+}
+
+
+function saveServerSettings() {
+    let _serverUrl = document.getElementById('server-url').value;
+    let _serverPassword = document.getElementById('server-password').value;
+    if (!_serverUrl) return;
+    
+    server.serverUrl = _serverUrl;
+    server.serverPassword = _serverPassword;
+    localStorage.setItem('bld.serverUrl', server.serverUrl);
+    localStorage.setItem('bld.serverPswd', server.serverPassword);
+    server.loadData();
+    toggleServerPanel();
+    forceUpdate();
+}
+    
+function toggleServerPanel() {
+    if (document.getElementById('server-panel').style.display === 'flex') {
+        document.getElementById('server-panel').style.display = 'none';
+    }
+    else {
+        document.getElementById('settings-panel').style.display = 'none';
+        const serverPanel = document.getElementById('server-panel');
+        serverPanel.style.display = 'flex';
+        
+        document.getElementById('server-url').value = server.serverUrl;
+        document.getElementById('server-password').value = server.serverPassword;
+    }
+}
+
+function onClickNext() {
+    const activeButtons = document.querySelectorAll('.toggle-btn.active');
+    const activeButtonNames = Array.from(activeButtons).map(btn => btn.textContent);
+    cube3.addMark(activeButtonNames);
+    if (cube3.getAllKeysToPush().length > 0) {
+        print(`Add marks: ${cube3.getAllKeysToPush().map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+    }
+    cube3.addTimes();
+    server.savePushClear();
+    newScramble();
+}
+
+function newScramble() {
+    document.querySelector('.title').innerText = 'Generating Scramble...';
+    const s = cube3.newScramble();
+    drawCube.updatePieceColors(s.cube);
+    document.querySelector('.title').innerText = s.scr;
+    buttonRow.resetButtons();
+    if (cube3.doCongrates()) {
+        alert('Congratulations, you have learned all 818 algs!');
+    }
+}
+
+// Command Input
+const textInput = document.getElementsByClassName('command-input')[0].getElementsByTagName('input')[0];
+let cmd = '';
+document.addEventListener('keydown', function(event) {
+    if (timer.isTimerRunning) {
+        event.preventDefault();
+        timer.stopTimer();
+        return;
+    }
+    if (event.key === 'Escape') {
+        if (document.getElementById('settings-panel').style.display === 'flex') {
+            toggleSettingsPanel();
+        }
+        else if (document.getElementById('server-panel').style.display === 'flex') {
+            toggleServerPanel();
+        }
+        else if (textInput.focus) {
+            textInput.blur();
+        }
+        return;
+    }
+    if (event.key === '`') { // Do not move down
+        event.preventDefault();
+        toggleSettingsPanel();
+        return;
+    }
+    if (document.getElementById('settings-panel').style.display === 'flex' || 
+        document.getElementById('server-panel').style.display === 'flex') {
+        return;
+    }
+    if (event.key === ' ' && textInput !== document.activeElement && timer.enabled) {
+        event.preventDefault();
+        timer.startLongPress();
+        return;
+    }
+    if (event.key.length === 1 && event.key[0] >= '1' && event.key[0] <= '9' && textInput !== document.activeElement) {
+        event.preventDefault();
+        let idx = parseInt(event.key);
+        if (idx < buttonRow.buttonRow.children.length) {
+            let button = buttonRow.buttonRow.children[idx - 1];
+            if (button.classList.contains('toggle-btn')) {
+                button.click();
+            }
+        }
+        return;
+    }
+    if (event.key === 'Tab') {
+        event.preventDefault();
+        onClickNext();
+        textInput.blur();
+        return;
+    }
+    if (textInput !== document.activeElement) {
+        textInput.focus();
+    }
+    if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        textInput.value = cmd;
+        textInput.focus();
+        textInput.setSelectionRange(textInput.value.length, textInput.value.length);
+    }
+    if (event.key === 'Enter') {
+        cmd = textInput.value.trim();
+        textInput.value = '';
+        textInput.blur();
+        if (cmd.length === 0) return;
+        if (cmd[0] === '.') {
+            let key = cmd.substring(1).trimStart();
+            if (cube3.stats[key]) {
+                print(`${key}: ${cube3.getAlgInfo(key).filter(x=>x!=='*').join(', ')}`);
+            } else if (cube3.algs[key]) {
+                print(`${key}: ${cube3.algs[key]}`);
+            } else if (cube3.memDict[key.toUpperCase()]) {
+                print(`${key}: ${cube3.memDict[key.toUpperCase()]}`);
+            } else {
+                print('Key not found.');
+            }
+        } else if (cmd[0] === '+') {
+            const keys = cmd.substring(1).trimStart().split(' ');
+            cube3.addMark(keys);
+            print(`Add marks: ${cube3.getAllKeysToPush().map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+            server.savePushClear();
+        } else if (cmd[0] === '-') {
+            const keys = cmd.substring(1).trimStart().split(' ');
+            cube3.removeMark(keys);
+            print(`Remove marks: ${cube3.getAllKeysToPush().map(x => `${x}(${cube3.stats[x].times}/${cube3.stats[x].mark})`).join(', ')}`);
+            server.savePushClear();
+        } else {
+            cmd = cmd.toLowerCase();
+            if (cmd === 'alg') {
+                const randKey = cube3.markedAlgKeys[Math.floor(Math.random() * cube3.markedAlgKeys.length)];
+                print(`${randKey}: ${cube3.algs[randKey]}`);
+            } else if (cmd === 'cp') {
+                const lastSolveInfo = `${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`;
+                navigator.clipboard.writeText(lastSolveInfo).then(() => {
+                    print(`Copied: ${timer.finalTimeStr} ... @${timer.nowTimeStr}`);
+                }).catch(err => {
+                    print('Failed to copy: ' + err);
+                });
+            } else if (cmd === 'top') {
+                const numTop = 7;
+                let topKeys = Object.keys(cube3.stats).filter(key => cube3.isNonPro(key))
+                    .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
+                print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
+            } else if (cmd === 'ud') {
+                server.loadData();
+                forceUpdate();
+            } else if (cmd === 'ul') {
+                server.pushAll();
+            } else if (cmd.startsWith('mode')) {
+                const modeStr = cmd.substring(4).trim();
+                if (['rc', 'ec', 'e', 'c', 'r', 'w'].includes(modeStr)) {
+                    const modeSelect = document.getElementById('mode-select');
+                    modeSelect.value = modeStr;
+                    const selectedOption = modeSelect.options[modeSelect.selectedIndex];
+                    const displayName = selectedOption.text;
+                    saveSettings(true);
+                    print(`Mode => ${displayName}`);
+                } else {
+                    print(`Unknown mode: ${modeStr}. Modes: rc, ec, e, c, r, w`);
+                }
+            } else {
+                print(`?`);
+            }
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await server.loadData();
+    newScramble();
+});
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then((registration) => {
+                console.log('ServiceWorker registered with scope:', registration.scope);
+            })
+            .catch((error) => {
+                console.error('ServiceWorker registration failed:', error);
+            });
+    });
+}
+
+</script>
+</body>
+</html>
