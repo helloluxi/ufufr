@@ -232,7 +232,6 @@ class ButtonRow {
 // Timer class for handling timing functionality
 class Timer {
     constructor(canvasId, timerContainerId, timerDisplayId, commandOutputId) {
-        this.enabled = localStorage.getItem('bld.timer') !== 'false';
         this.canvas = document.getElementById(canvasId);
         this.timerContainer = document.getElementById(timerContainerId);
         this.timerDisplay = document.getElementById(timerDisplayId);
@@ -244,23 +243,21 @@ class Timer {
         this.pressStarted = false;
         this.finalTimeStr = '*';
         this.nowTimeStr = '*';
+        this.lastStopTime = 0;
         
         this.setupEventListeners();
     }
-
-    setEnabled(enabled) {
-        this.enabled = enabled;
-        localStorage.setItem('bld.timer', enabled);
-    }
     
     formatTime(time) {
-        const seconds = (time / 1000) | 0;
-        const milliseconds = ((time % 1000) / 10) | 0;
-        return `${seconds}.${milliseconds.toString().padStart(2, '0')}`;
+        const minutes = Math.floor(time / 60000);
+        const seconds = Math.floor((time % 60000) / 1000);
+        const milliseconds = Math.floor((time % 1000) / 10);
+        return minutes > 0 
+            ? `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`
+            : `${seconds}.${milliseconds.toString().padStart(2, '0')}`;
     }
     
     startTimer() {
-        if (!timer.enabled) return;
         this.isTimerRunning = true;
         this.startTime = new Date().getTime();
         this.timerInterval = setInterval(() => {
@@ -284,13 +281,11 @@ class Timer {
     }
     
     prepareTimer() {
-        if (!timer.enabled) return;
         this.timerContainer.style.display = 'flex';
         this.timerDisplay.textContent = '0.00';
     }
     
     startLongPress() {
-        if (!timer.enabled) return false;
         this.pressStarted = true;
         this.longPressTimer = setTimeout(() => {
             this.prepareTimer();
@@ -326,7 +321,7 @@ class Timer {
         this.timerContainer.addEventListener('touchstart', () => this.stopTimer());
         window.addEventListener('blur', () => this.handleBlur());
           document.addEventListener('keyup', (e) => {
-            if (e.key === ' ' && textInput !== document.activeElement && timer.enabled && !this.isTimerRunning) {
+            if (e.key === ' ' && textInput !== document.activeElement && !this.isTimerRunning) {
                 this.endPress();
             }
         });
@@ -444,7 +439,7 @@ document.addEventListener('keydown', function(event) {
     if (document.getElementById('settings-panel').style.display === 'flex') {
         return;
     }
-    if (event.key === ' ' && textInput !== document.activeElement && timer.enabled) {
+    if (event.key === ' ' && textInput !== document.activeElement) {
         event.preventDefault();
         timer.startLongPress();
         return;
@@ -472,7 +467,10 @@ document.addEventListener('keydown', function(event) {
     }
     if (textInput !== document.activeElement) {
         // Ignore modifier keys
-        if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        if (event.metaKey || event.ctrlKey || event.altKey) {
+            return;
+        }
+        if (Date.now() - timer.lastStopTime < 300) {
             return;
         }
         commandInputElem.classList.add('visible');
