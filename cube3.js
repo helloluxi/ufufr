@@ -354,7 +354,7 @@ class Cube3 {
             let scrambleE = this.mode === 'ec' || this.mode === 'e' || this.mode === 'rc';
             let scrambleC = this.mode === 'ec' || this.mode === 'c' || this.mode === 'rc';
             this.occupied = Array(20).fill(false);
-            this.occupied[0] = this.occupied[12] = true;
+            this.occupied[Cube3.edgeBufferIdx] = this.occupied[Cube3.cornBufferIdx + 12] = true;
             let sfPar = [];
             let hasPar = 0;
             if (this.usePar && scrambleE && scrambleC && Math.random() < 0.5) {

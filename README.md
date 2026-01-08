@@ -59,6 +59,8 @@ static edgeBufferIdx = 0;
 static cornBufferIdx = 0;
 ```
 
+If you would prefer capital letters for corners instead, do not forget to swap the `isEdge` and `isCorner` functions.
+
 #### 2. Color Mapping ([ufufr.js](ufufr.js))
 
 Customize cube colors to match your color scheme preferences:
