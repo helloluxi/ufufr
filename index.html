@@ -57,9 +57,6 @@
             <div id="tiny-line" style="text-align: center; color: #E0E0E0; font-size: 0.8em; margin: 10px 0;"></div>
         </div>
         <button id="back-button" onclick="toggleSettingsPanel()">Back</button>
-        <div style="text-align: center; color: #808080; font-size: 0.6em; margin: 10px 0;">
-            <a href="https://github.com/helloluxi/ufufr" target="_blank" style="color: #4A9EFF; text-decoration: none;">Github Repo</a> • Readme Included • GPLv3 License
-        </div>
     </div>
     <div class="canvas" id="canvas">
         <div id="rubiksCubeContainer"></div>
@@ -80,7 +77,27 @@
         <div id="timer-display">0.00</div>
     </div>
 
-
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content">
+            <h2>Welcome to Lu Timer! 👋</h2>
+            <div class="tutorial-text">
+                <p><strong>The Philosophy:</strong> Efficient training through <em>adaptive frequency</em>. Cases you struggle with will appear more often in practice.</p>
+                
+                <p><strong>Quick Start Guide:</strong></p>
+                <ul>
+                    <li><strong>Open Settings:</strong> Double-click or tap the scramble text / press <code>`</code> key</li>
+                    <li><strong>Start Timer:</strong> Long-press the cube / press space key</li>
+                    <li><strong>Next Scramble:</strong> Press <code>Tab</code> / click "Next →"</li>
+                    <li>Click buttons to mark hard cases.</li>
+                </ul>
+                <p><strong>⭐ Highly Recommended:</strong> Fork this repository and customize it as you like!</p>
+                <p>
+                    <a href="https://github.com/helloluxi/ufufr" target="_blank" style="color: #4A9EFF; text-decoration: none;">📖 View GitHub Repo & Full README</a>
+                </p>
+            </div>
+            <button id="tutorial-close-btn" onclick="closeTutorial()">Got it!</button>
+        </div>
+    </div>
 
 <script src="min2phase.js"></script>
 <script src="cube3.js"></script>

@@ -514,36 +514,33 @@ document.addEventListener('keydown', function(event) {
             cube3.removeMark(keys);
             print(`Remove marks: ${keys.map(x => `${x}(${cube3.stats[x].mark}/${cube3.stats[x].times})`).join(', ')}`);
             storage.saveStats();
-        } else {
-            cmd = cmd.toLowerCase();
-            if (cmd === 'cp') {
-                const lastSolveInfo = `${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`;
-                navigator.clipboard.writeText(lastSolveInfo).then(() => {
-                    print(`Copied: ${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`);
-                }).catch(err => {
-                    print('Failed to copy: ' + err);
-                });
-            } else if (cmd === 't') {
-                const numTop = 7;
-                let topKeys = Object.keys(cube3.stats)
-                    .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
-                print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
-            } else if (cmd === 'ud') {
-                storage.loadData();
-                forceUpdate();
-            } else if (cmd.startsWith('d ')) {
-                const modeStr = cmd.substring(2).trim();
-                if (['rc', 'ec', 'e', 'c', 'r', 'w'].includes(modeStr)) {
-                    const modeSelect = document.getElementById('mode-select');
-                    modeSelect.value = modeStr;
-                    saveSettings(true);
-                    print(`Mode => ${modeStr}`);
-                } else {
-                    print(`Unknown mode: ${modeStr}. Modes: rc, ec, e, c, r`);
-                }
+        } else if (cmd[0] === 'd') {
+            const modeStr = cmd.slice(1).trim();
+            if (['rc', 'ec', 'e', 'c', 'r'].includes(modeStr)) {
+                const modeSelect = document.getElementById('mode-select');
+                modeSelect.value = modeStr;
+                saveSettings(true);
+                print(`Mode => ${modeStr}`);
             } else {
-                print(`?`);
+                print(`Unknown mode: ${modeStr}. Modes: rc, ec, e, c, r`);
             }
+        } else if (cmd === 'c') {
+            const lastSolveInfo = `${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`;
+            navigator.clipboard.writeText(lastSolveInfo).then(() => {
+                print(`Copied: ${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`);
+            }).catch(err => {
+                print('Failed to copy: ' + err);
+            });
+        } else if (cmd === 't') {
+            const numTop = 7;
+            let topKeys = Object.keys(cube3.stats)
+                .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
+            print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
+        } else if (cmd === 'u') {
+            storage.loadData();
+            forceUpdate();
+        } else {
+            print(`? Available commands: .<key>, +<key>, -<key>, d<mode>, c, t, u`);
         }
     }
 });
@@ -551,7 +548,26 @@ document.addEventListener('keydown', function(event) {
 document.addEventListener('DOMContentLoaded', async () => {
     await storage.loadData();
     newScramble();
+    checkAndShowTutorial();
 });
+
+function checkAndShowTutorial() {
+    const seenTutorial = localStorage.getItem('bld.seenTutorial');
+    if (!seenTutorial) {
+        const modal = document.getElementById('tutorial-modal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
+}
+
+function closeTutorial() {
+    const modal = document.getElementById('tutorial-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        localStorage.setItem('bld.seenTutorial', '1');
+    }
+}
 
 // Only register service worker if not running on localhost
 if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost') && window.location.hostname !== '127.0.0.1') {

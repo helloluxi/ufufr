@@ -1,10 +1,10 @@
-# Lu Timer (3x3x3 Blindfolded Training Static Web App)
+# Lu Timer (3x3x3 Blindfolded Trainer)
 
 A specialized web-based training application for 3x3x3 Rubik's Cube blindfolded solving, implementing an adaptive practice methodology that prioritizes weak cases for more efficient learning.
 
 ## Core Philosophy
 
-**TL;DR:** Simulating competition ≠ efficient training
+**TL;DR:** Simulating competition ≠ efficient training, weak cases should appear more often.
 
 In competition, scrambles are truly random—every case has equal probability (yes I know it will be slightly different based on cycle break strategies). However, this randomness is inefficient for training. Let's say if you've mastered 800 out of 818 cases (instant recall, flawless execution) but still struggle with 18 specific cases (slow recall or occasional errors), random scrambles waste your time repeatedly practicing cases you've already mastered. Occasional practice with fully random scrambles is still beneficial.
 
@@ -127,9 +127,9 @@ The app includes a command-line interface for advanced operations. Access it by:
 | `+KEY1 KEY2 ...` | Manually add marks to cases | `+BD CE` marks BD and CE |
 | `-KEY1 KEY2 ...` | Remove marks and reset case | `-BD` resets BD to unmarked state |
 | `t` | Show top 7 most marked cases | `t` |
-| `cp` | Copy last solve info to clipboard | `cp` copies time, scramble, timestamp |
+| `c` | Copy last solve info to clipboard | `c` copies time, scramble, timestamp |
 | `d MODE` | Change training mode | `d e` switches to edge-only mode |
-| `ud` | Force reload and update | `ud` |
+| `u` | Reload service worker | `u` |
 
 Press `Enter` to execute commands. Press `↑` (up arrow) to recall the last command.
 

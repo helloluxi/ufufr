@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hub-cache';
+const CACHE_NAME = 'ufufr-260107';
 const urlsToCache = [
     './',
     './alg.txt',
