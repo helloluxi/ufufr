@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.svg" type="image/x-icon">
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-title" content="3BLD">
+    <title>3BLD</title>
+    <link rel="stylesheet" href="cube.css">
+</head>
+<body>
+    <div class="title" ondblclick="toggleSettingsPanel()">Generating Scramble...</div>
+    <div id="settings-panel">
+        <div id="settings-content">
+            <div class="setting">
+                <label for="mode-select">Mode</label>
+                <select id="mode-select" onchange="saveSettings(true)">
+                    <option value="rc">Random + Corner</option>
+                    <option value="ec">Edge + Corner</option>
+                    <option value="e">Edge</option>
+                    <option value="c">Corner</option>
+                    <option value="r">Random</option>
+                </select>
+            </div>
+            <div class="setting">
+                <label for="parity-ckbx">Parity</label>
+                <input type="checkbox" id="parity-ckbx" onchange="saveSettings(true)" />
+            </div>
+            <div class="setting">
+                <label for="lr-slider" style="width: 200px;">Learning Rate</label>
+                <input type="range" min="0" max="30" value="20" step="1" id="lr-slider" onchange="saveSettings()" oninput="updateLRDisplay()" />
+                <span id="lr-value" class="slider-value">0.1</span>
+            </div>
+            <div class="setting">
+                <label for="ff-slider" style="width: 200px;">Fall Off Rate</label>
+                <input type="range" min="0.1" max="2" value="1" step="0.1" id="ff-slider" onchange="saveSettings()" oninput="document.getElementById('ff-value').innerText = this.value" />
+                <span id="ff-value" class="slider-value">1</span>
+            </div>
+            <div class="setting">
+                <label for="ft-slider" style="width: 200px;">Flip/Twist</label>
+                <input type="range" min="0" max="1" value="0" step="0.1" id="ft-slider" onchange="saveSettings()" oninput="document.getElementById('ft-value').innerText = this.value" />
+                <span id="ft-value" class="slider-value">0</span>
+            </div>
+            <div class="setting">
+                <label for="ft2-slider" style="width: 200px;">3-Twist</label>
+                <input type="range" min="0" max="1" value="0" step="0.1" id="ft2-slider" onchange="saveSettings()" oninput="document.getElementById('ft2-value').innerText = this.value" />
+                <span id="ft2-value" class="slider-value">0</span>
+            </div>
+            <div class="setting">
+                <label for="fl-slider" style="width: 200px;">Float</label>
+                <input type="range" min="0" max="1" value="0" step="0.1" id="fl-slider" onchange="saveSettings()" oninput="document.getElementById('fl-value').innerText = this.value" />
+                <span id="fl-value" class="slider-value">0</span>
+            </div>
+            <div id="tiny-line" style="text-align: center; color: #E0E0E0; font-size: 0.8em; margin: 10px 0;"></div>
+        </div>
+        <button id="back-button" onclick="toggleSettingsPanel()">Back</button>
+        <div style="text-align: center; color: #808080; font-size: 0.6em; margin: 10px 0;">
+            <a href="https://github.com/helloluxi/ufufr" target="_blank" style="color: #4A9EFF; text-decoration: none;">Github Repo</a> • Readme Included • GPLv3 License
+        </div>
+    </div>
+    <div class="canvas" id="canvas">
+        <div id="rubiksCubeContainer"></div>
+    </div>
+    <div class="button-row" style="text-align: center; margin-bottom: 10px;">
+        <button id="nextButton">Next &rarr;</button>
+    </div>
+    <div class="bottom">
+        <div class="command-input">
+            <input type="text" id="command-input" placeholder="Enter command..." autocomplete="off">
+        </div>
+        <div class="text-output">
+            <div id="command-output"></div>
+        </div>
+    </div>
+    
+    <div id="timer-container">
+        <div id="timer-display">0.00</div>
+    </div>
+
+
+
+<script src="min2phase.js"></script>
+<script src="cube3.js"></script>
+<script src="ufufr.js"></script>
+</body>
+</html>

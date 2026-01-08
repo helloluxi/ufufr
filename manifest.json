@@ -1,0 +1,18 @@
+{
+  "name": "LuTimer",
+  "short_name": "",
+  "description": "3BLD",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#2c2c2c",
+  "theme_color": "#222",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
