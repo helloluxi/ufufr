@@ -93,9 +93,23 @@ Add your algorithms for each case.
 
 ### Using the Timer
 
-- **Start Timer**: Long-press (hold) anywhere on the cube display until it turns green
-- **Stop Timer**: Tap the cube display while timer is running
-- The timer automatically resets when you generate a new scramble
+- **Start Timer**: Long-press (hold) anywhere or press the spacebar on the cube display until it turns green
+- **Stop Timer**: Tap the cube display while timer is running or press any key to stop
+
+### Case Statistics Format
+
+When querying a case using the `.KEY` command in the terminal, the statistics shown are:
+- **Format**: `mark/times [weight]`
+  - `mark`: Number of times you've marked this case as difficult
+  - `times`: Total number of times you've practiced this case
+  - `weight`: Current sampling weight (higher = more likely to appear)
+
+Example: `3/45 [0.012]` means marked 3 times, practiced 45 times, with weight 0.012
+
+The same statistics are displayed in the settings panel:
+- `xxx/818`: Number of unique cases you've seen
+- `Freq`: Average practice frequency per case
+- `Marks`: Number of marked cases / Total mark count
 
 ### Marking System
 
@@ -105,10 +119,19 @@ When you mark a case (by clicking its button):
 - The weight function increases: higher marks = higher probability
 - Statistics are automatically saved to browser localStorage
 
-**Important Note**: Some cases cannot be marked:
-- **Floating 3-cycles**: Cases generated as floating buffer conflicts
-- **Parity**: Parity when there is cycle break or flip/twist
-- **Random Mode**
+Some cases cannot be marked:
+- Floating 3-cycles
+- Parity when there is cycle break or flip/twist
+- Random Mode
+
+### Case Button Badge
+
+The buttons in the practice interface use colored corner badges to show case status:
+
+- **Orange badge**: Cases that appeared in the current scramble
+- **Green badge**: Cases you've marked for practice (hover to see mark count)
+
+These badges help you quickly identify which cases you need to practice and which are in your current scramble.
 
 ### Mini Terminal
 
@@ -124,7 +147,7 @@ The app includes a command-line interface for advanced operations. Access it by:
 | `c` | Copy time, scramble, timestamp to clipboard | `c`  |
 | `d MODE` | Change training mode | `d e` switches to edge-only mode |
 | `t` | Show top 7 most marked cases | `t` |
-| `u` | Reload service worker | `u` |
+| `u` | Force reload service worker | `u` |
 
 Press `Enter` to execute commands. Press `↑` (up arrow) to recall the last command.
 
@@ -149,7 +172,8 @@ Double-click the title bar or use backtick key to open settings:
 
 ### Keyboard Shortcuts
 
-- `Tab`: Generate next scramble
+- `Tab`: Generate next scramble.
+- `` ` ``: Open/close settings panel
 - `1`-`9`: Toggle mark on corresponding button (left to right)
 - `↑` (up arrow): In terminal, recall last command
 - `Enter`: In terminal, execute command
@@ -164,6 +188,23 @@ All data is stored in browser localStorage:
 - **Static Files**: `alg.txt` and `mem.txt` are loaded from web server
 
 No phone-home are used. Your data is yours.
+
+### Offline Support & Service Worker
+
+This app uses a service worker to enable offline functionality. Once loaded, the app can work without an internet connection.
+
+- Cached files are updated automatically when you reload the app with internet connection
+- Use the `u` command in the terminal to manually trigger a cache update
+- The service worker cleans up old caches automatically to save space
+
+### Progressive Web App (PWA)
+
+This application can be installed as a Progressive Web App:
+
+- **On Desktop**: Click the install icon in your browser's address bar
+- **On Mobile**: Use "Add to Home Screen" from your browser menu
+- Once installed, it works offline and feels like a native app
+- Updates are managed by the service worker
 
 ## Philosophy: Build Your Own
 

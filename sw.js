@@ -21,6 +21,17 @@ self.addEventListener('install', function(event) {
     );
 });
 
+self.addEventListener('activate', function(event) {
+    event.waitUntil(
+        caches.keys().then(function(cacheNames) {
+            return Promise.all(
+                cacheNames.filter(cacheName => cacheName !== CACHE_NAME)
+                    .map(cacheName => caches.delete(cacheName))
+            );
+        })
+    );
+});
+
 self.addEventListener('fetch', function(event) {
     event.respondWith(
         caches.match(event.request)
@@ -36,10 +47,20 @@ self.addEventListener('fetch', function(event) {
 
 self.addEventListener('message', event => {
     if (event.data === 'ud') {
-      caches.open(CACHE_NAME).then(cache => {
-        urlsToCache.forEach(url => {
-          fetch(url).then(response => cache.put(url, response)).catch(err => console.error(`Failed to update ${url}:`, err));
-        });
-      });
+      event.waitUntil(
+        caches.delete(CACHE_NAME).then(() => {
+          return caches.open(CACHE_NAME);
+        }).then(cache => {
+          return Promise.all(
+            urlsToCache.map(url => 
+              fetch(url, { cache: 'reload' }).then(response => cache.put(url, response))
+            )
+          );
+        }).then(() => {
+          return self.clients.matchAll().then(clients => {
+            clients.forEach(client => client.postMessage('reload'));
+          });
+        })
+      );
     }
   });
