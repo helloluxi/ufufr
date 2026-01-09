@@ -1,6 +1,11 @@
 # Lu Timer (3x3x3 Blindfolded Trainer)
 
+[![en](https://img.shields.io/badge/lang-English-blue.svg)](README.md)
+[![简体中文](https://img.shields.io/badge/lang-简体中文-red.svg)](README.cn.md)
+
 A specialized web-based training application for 3x3x3 Rubik's Cube blindfolded solving, implementing an adaptive practice methodology that prioritizes weak cases for more efficient learning.
+
+This project is more like a codebase than a polished product. I encourage you to read through the code, understand the underlying principles, and build your own version tailored to your specific training needs.
 
 ## Core Philosophy
 
@@ -14,17 +19,16 @@ In competition, scrambles are truly random—every case has equal probability (y
 
 The training algorithm uses a weighted sampling system:
 
-- **Unmarked cases** you've practiced: Lower probability (proportional to `times^(-2/(1 + mark × falloff))`)
-- **Marked cases**: Higher probability based on mark count and your learning rate settings
-- **New cases** (never practiced): Moderate to high probability depending on learning rate
+- **Learned cases** : `times^(-2/(1 + mark × falloff))`
+- **New cases** : Learning rate in your settings
 
-The choice of weight function is more like a heuristic than a rigorously derived formula, so feel free to tweak to suit your learning style.
+The choice of weight function is more like a heuristic than a rigorously tested formula, so feel free to tweak to suit your learning style.
 
 ## Getting Started
 
 ### Installation
 
-1. **Fork this repository** - This is highly recommended as you'll want to customize various settings
+1. **Fork this repository** - This is highly recommended as you'll want to do version control and data management (Contributions from the open-source community are also welcome to make accessible improvements!)
 2. Clone your fork to your local machine and use locally / on your Github pages / on your own web server (with your favorite data syncing backend!)
 
 ### Customization (Highly Recommended)
@@ -87,14 +91,6 @@ Add your algorithms for each case.
 
 ## Usage Guide
 
-### Basic Operation
-
-1. **View Scramble**: The app generates a scramble and displays it visually
-2. **Practice**: Memorize and solve the cube (physically or mentally)
-3. **Mark Difficult Cases**: If you struggled with a case, click its button to mark it
-4. **Next Scramble**: Click "Next →" or press `Tab` to generate a new scramble
-5. **Repeat**: The system automatically adjusts future scramble probabilities
-
 ### Using the Timer
 
 - **Start Timer**: Long-press (hold) anywhere on the cube display until it turns green
@@ -109,11 +105,10 @@ When you mark a case (by clicking its button):
 - The weight function increases: higher marks = higher probability
 - Statistics are automatically saved to browser localStorage
 
-**Important Note**: Some cases cannot be marked due to technical constraints:
+**Important Note**: Some cases cannot be marked:
 - **Floating 3-cycles**: Cases generated as floating buffer conflicts
-- **Parity cases**: When parity is involved with other special categories
-
-This is intentional—these cases follow different generation rules and mixing them with normal weighted sampling would break the scramble generation algorithm.
+- **Parity**: Parity when there is cycle break or flip/twist
+- **Random Mode**
 
 ### Mini Terminal
 
@@ -121,16 +116,14 @@ The app includes a command-line interface for advanced operations. Access it by:
 - Double-clicking/double-tapping the cube display
 - Or simply start typing (it will auto-open)
 
-#### Terminal Commands
-
 | Command | Description | Example |
 |---------|-------------|---------|
-| `.KEY` | Look up info for a specific case | `.BD` shows memo, alg, and stats for BD |
-| `+KEY1 KEY2 ...` | Manually add marks to cases | `+BD CE` marks BD and CE |
-| `-KEY1 KEY2 ...` | Remove marks and reset case | `-BD` resets BD to unmarked state |
-| `t` | Show top 7 most marked cases | `t` |
-| `c` | Copy last solve info to clipboard | `c` copies time, scramble, timestamp |
+| `.KEY` | Look up info for a specific case | `.CG` shows memo, alg, and stats for CG |
+| `+KEY1 KEY2 ...` | Manually add marks to cases | `+CG c+g+` marks CG and c+g+ |
+| `-KEY1 KEY2 ...` | Remove marks and reset case | `-CG` resets CG to unmarked state |
+| `c` | Copy time, scramble, timestamp to clipboard | `c`  |
 | `d MODE` | Change training mode | `d e` switches to edge-only mode |
+| `t` | Show top 7 most marked cases | `t` |
 | `u` | Reload service worker | `u` |
 
 Press `Enter` to execute commands. Press `↑` (up arrow) to recall the last command.
@@ -148,7 +141,7 @@ Double-click the title bar or use backtick key to open settings:
 
 - **Mode**: Select training mode (Random, Edge, Corner, etc.)
 - **Parity**: Toggle whether parity cases should be included
-- **Learning Rate**: Controls probability for new/marked cases (higher = faster learning)
+- **Learning Rate**: Controls probability for new cases
 - **Fall Off Rate**: How quickly mark importance decays with practice (higher = slower decay for marked cases)
 - **Flip/Twist**: Probability of flip/twist-only cases (0-1)
 - **3-Twist**: Probability of 3-twist corner cases (0-1)
@@ -162,80 +155,21 @@ Double-click the title bar or use backtick key to open settings:
 - `Enter`: In terminal, execute command
 - `Esc`: Close terminal or settings panel
 
-## Technical Details
-
-### Case Generation
-
-The tool generates scrambles using a sophisticated algorithm:
-
-1. **Normal 3-cycles**: Standard letter pairs
-   - Selected by weighted sampling based on practice history
-   - Cannot select targets that conflict with buffer or other targets in the same scramble
-
-2. **Floating 3-cycles**: Targets that would normally conflict with buffer
-   - Generated as 4-letter sequences
-   - The first letter leaves buffer, enabling the 3-cycle, then returns to buffer
-   - More complex to execute but tests advanced buffer-management skills
-
-3. **Flip/Twist**: Orientation-only cases
-   - `e+`: Edge flip (2 edges flipped)
-   - `c+`: Corner twist (2 corners twisted)
-   - `c++`: 3-twist (3 corners twisted)
-
-4. **Parity**: Special odd-permutation cases
-   - Generated when edge and corner modes are both active
-   - Swaps one edge target with another to create odd parity
-
-### Weight Function
-
-The probability weight for each case is calculated as (search for `getWeight` in [cube3.js](cube3.js)):
-
-```
-weight = times^(-2 / (1 + mark × falloff))
-```
-
-Where:
-- `times`: Number of times practiced
-- `mark`: Number of times marked as difficult
-- `falloff`: User-configured decay rate (default 1)
-
-Special cases:
-- Never practiced, unmarked: weight = `learningRate`
-- Never practiced, marked: weight = 1
-- More marks → higher weight → higher probability
-
 ### Data Persistence
 
 All data is stored in browser localStorage:
+- **Seen Tutorial**: Whether you've seen the tutorial (`bld.seenTutorial`)
 - **Stats**: Practice counts and marks for each case (`bld.stats`)
 - **Settings**: User preferences (`bld.settings`)
 - **Static Files**: `alg.txt` and `mem.txt` are loaded from web server
 
 No phone-home are used. Your data is yours.
 
-## Development & Customization
-
-### Project Structure
-
-```
-ufufr/
-├── index.html          # Main HTML structure
-├── cube.css            # Styling
-├── ufufr.js            # Main app logic, UI, timer, storage (customize this!)
-├── cube3.js            # Core algorithm: scramble generation, stats, weights (customize this!)
-├── min2phase.js        # Two-phase algorithm for cube solving (by Shuang Chen)
-├── mem.txt             # User's memo words (customize this!)
-├── alg.txt             # User's algorithms (customize this!)
-├── sw.js               # Service worker for offline capability
-├── manifest.json       # PWA manifest
-└── LICENSE             # GPLv3 License
-```
-
 ## Philosophy: Build Your Own
 
-**This tool embodies a practice philosophy, not a one-size-fits-all solution.** I strongly encourage you to understand the principles and implement your own version tailored to your specific needs. The code is intentionally readable—study it, learn from it, and build something better suited to your training style.
+**This tool embodies a practice philosophy, not a one-size-fits-all solution.** I strongly encourage you to understand the principles and implement your own version tailored to your specific needs.
 
-Every speedcuber has unique preferences: different letter schemes, different memo systems, different weak spots, different advanced techniques like LTCT. The most effective training tool is one you've customized yourself.
+Every BLDer has unique preferences: different letter schemes, different memo systems, different weak spots, different advanced techniques like LTCT. The most effective training tool is one you've customized yourself.
 
 ## Maintenance & Support
 
@@ -246,7 +180,7 @@ This repository is **not actively maintained** as I am not an active competitor.
 - **Donate**: Buy me a coffee if you meet me in a WCA competition :)
 
 I personally use a customized version of this tool hosted on my own private server and haven't tested the public demo extensively.
-The best way to use this project is to fork it and make it your own.
+The best way to use this project is to fork it and manage your own version control and data.
 
 ## Acknowledgements
 
