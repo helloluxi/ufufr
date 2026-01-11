@@ -19,7 +19,7 @@
 
 训练算法采用加权采样系统：
 
-- **练习过的case**：`times^(-2/(1 + mark × falloff))`
+- **练习过的case**：`(mark ? markBoost : 1) × times^(-2/(1 + mark))`
 - **新case**：你设定的学习率
 
 权重函数更像是一个经验公式而非严格测试结果，你可以根据自己的学习习惯随意调整。
@@ -31,63 +31,19 @@
 1. **Fork 本仓库** - 强烈推荐，可以自由地做版本控制、数据管理 (也欢迎开源社区做出大众化的改进！)
 2. 将你 fork 的仓库克隆到本地，可以选择本地使用 / 部署到 Github Pages / 部署到自己的服务器（搭配你喜欢的数据同步方案！）
 
-### 个性化配置（强烈推荐）
+### 个性化配置（可选）
 
-正式使用前，建议先根据你的还原习惯进行配置：
+你可以根据需要自定义以下文件：
 
-#### 1. 编码方案与缓冲块 ([cube3.js](cube3.js))
-
-修改编码方案和缓冲块位置，使其符合你的个人系统：
-
-```javascript 
-// cube3.js 第 7-25 行
-
-// UF FU UL LU UB BU UR RU
-// DF FD DL LD DB BD DR RD
-// FR RF FL LF BL LB BR RB
-static edgeLetterScheme = 'ABCDEFGHIJKLMNOPQRSTWXYZ';
-
-// UFR RUF FUR UFL FUL LUF
-// UBL LUB BUL UBR BUR RUB
-// DFL LDF FDL DBL BDL LDB
-// DBR BRD RDB DFR FDR RDF
-static cornLetterScheme = 'ahqcbtedwgfzilsknxmpyojr';
-
-// 0: UF, 1: UL, 2: UB, 3: UR
-// 4: DF, 5: DL, 6: DB, 7: DR
-// 8: FR, 9: FL, 10: BL, 11: BR
-static edgeBufferIdx = 0;
-
-// 0: UFR, 1: UFL, 2: UBL, 3: UBR
-// 4: DFL, 5: DBL, 6: DBR, 7: DFR
-static cornBufferIdx = 0;
-```
-
-如果你喜欢用大写字母表示角块，别忘了交换 `isEdge` 和 `isCorner` 函数。
-
-#### 2. 颜色配置 ([ufufr.js](ufufr.js))
-
-自定义魔方配色方案：
-
-```javascript
-// ufufr.js 第 20-27 行
-this.colorMapping = {
-    'd': '#FFFFFF', // 白色 (下)
-    'u': '#FFFF00', // 黄色 (上)
-    'f': '#FF0000', // 红色 (前)
-    'b': '#FFA500', // 橙色 (后)
-    'l': '#0000FF', // 蓝色 (左)
-    'r': '#00FF00'  // 绿色 (右)
-};
-```
-
-#### 3. 记忆编码 ([mem.txt](mem.txt))
+#### 记忆编码 ([mem.txt](mem.txt))
 
 填入你为每个字母对设定的记忆词或记忆图像。
 
-#### 4. 公式库 ([alg.txt](alg.txt))
+#### 公式库 ([alg.txt](alg.txt))
 
 添加每种case的还原公式。
+
+其他设置如编码方案、缓冲块位置和颜色配置可以直接在应用的设置面板中配置。
 
 ## 使用指南
 
@@ -157,18 +113,6 @@ this.colorMapping = {
 - `c`: 纯角训练
 - `ec`: 棱角分控（棱块+角块均自适应）
 - `rc`: 棱随角控（棱块随机+角块自适应）
-
-### 设置面板
-
-双击标题栏或按反引号键（`）打开设置：
-
-- **模式**：选择训练模式（随机、纯棱、纯角等）
-- **奇偶**：是否包含奇偶case
-- **学习率**：控制新case的出现概率
-- **衰减率**：标记的重要性随练习次数衰减的速度（越高 = 已标记case衰减越慢）
-- **翻转/扭转**：纯翻转/扭转case的出现概率（0-1）
-- **三扭转**：三个角块扭转case的出现概率（0-1）
-- **浮动**：浮动缓冲块case的出现概率（0-1）
 
 ### 快捷键
 

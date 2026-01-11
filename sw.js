@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ufufr-260107';
+const CACHE_NAME = 'ufufr-260111';
 const urlsToCache = [
     './',
     './alg.txt',
@@ -7,8 +7,9 @@ const urlsToCache = [
     './favicon.svg',
     './index.html',
     './manifest.json',
-    './mem.txt',
     './min2phase.js',
+    './prefs.js',
+    './tutorial.js',
     './ufufr.js'
 ];
 

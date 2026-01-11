@@ -19,7 +19,7 @@ In competition, scrambles are truly random—every case has equal probability (y
 
 The training algorithm uses a weighted sampling system:
 
-- **Learned cases** : `times^(-2/(1 + mark × falloff))`
+- **Learned cases** : `(mark ? markBoost : 1) × times^(-2/(1 + mark))`
 - **New cases** : Learning rate in your settings
 
 The choice of weight function is more like a heuristic than a rigorously tested formula, so feel free to tweak to suit your learning style.
@@ -31,63 +31,19 @@ The choice of weight function is more like a heuristic than a rigorously tested 
 1. **Fork this repository** - This is highly recommended as you'll want to do version control and data management (Contributions from the open-source community are also welcome to make accessible improvements!)
 2. Clone your fork to your local machine and use locally / on your Github pages / on your own web server (with your favorite data syncing backend!)
 
-### Customization (Highly Recommended)
+### Customization (Optional)
 
-Before using this tool extensively, customize it to match your solving style:
+You can customize the following files to personalize your training experience:
 
-#### 1. Letter Scheme & Buffer ([cube3.js](cube3.js))
-
-Edit the letter schemes and buffer positions to match your personal system:
-
-```javascript 
-// Lines 7-25 in cube3.js
-
-// UF FU UL LU UB BU UR RU
-// DF FD DL LD DB BD DR RD
-// FR RF FL LF BL LB BR RB
-static edgeLetterScheme = 'ABCDEFGHIJKLMNOPQRSTWXYZ';
-
-// UFR RUF FUR UFL FUL LUF
-// UBL LUB BUL UBR BUR RUB
-// DFL LDF FDL DBL BDL LDB
-// DBR BRD RDB DFR FDR RDF
-static cornLetterScheme = 'ahqcbtedwgfzilsknxmpyojr';
-
-// 0: UF, 1: UL, 2: UB, 3: UR
-// 4: DF, 5: DL, 6: DB, 7: DR
-// 8: FR, 9: FL, 10: BL, 11: BR
-static edgeBufferIdx = 0;
-
-// 0: UFR, 1: UFL, 2: UBL, 3: UBR
-// 4: DFL, 5: DBL, 6: DBR, 7: DFR
-static cornBufferIdx = 0;
-```
-
-If you would prefer capital letters for corners instead, do not forget to swap the `isEdge` and `isCorner` functions.
-
-#### 2. Color Mapping ([ufufr.js](ufufr.js))
-
-Customize cube colors to match your color scheme preferences:
-
-```javascript
-// Lines 20-27 in ufufr.js
-this.colorMapping = {
-    'd': '#FFFFFF', // White (Down)
-    'u': '#FFFF00', // Yellow (Up)
-    'f': '#FF0000', // Red (Front)
-    'b': '#FFA500', // Orange (Back)
-    'l': '#0000FF', // Blue (Left)
-    'r': '#00FF00'  // Green (Right)
-};
-```
-
-#### 3. Memo Words ([mem.txt](mem.txt))
+#### Memo Words ([mem.txt](mem.txt))
 
 Fill in your memorization words/images for each letter pair.
 
-#### 4. Algorithms ([alg.txt](alg.txt))
+#### Algorithms ([alg.txt](alg.txt))
 
 Add your algorithms for each case.
+
+Other settings like letter schemes, buffer positions, and color mappings can be configured directly through the settings panel in the app.
 
 ## Usage Guide
 
@@ -157,18 +113,6 @@ Modes:
 - `c`: Corners only
 - `ec`: Controlled Edges + Controlled corners 
 - `rc`: Random edges + Controlled corners
-
-### Settings Panel
-
-Double-click the title bar or use backtick key to open settings:
-
-- **Mode**: Select training mode (Random, Edge, Corner, etc.)
-- **Parity**: Toggle whether parity cases should be included
-- **Learning Rate**: Controls probability for new cases
-- **Fall Off Rate**: How quickly mark importance decays with practice (higher = slower decay for marked cases)
-- **Flip/Twist**: Probability of flip/twist-only cases (0-1)
-- **3-Twist**: Probability of 3-twist corner cases (0-1)
-- **Float**: Probability of floating buffer cases (0-1)
 
 ### Keyboard Shortcuts
 

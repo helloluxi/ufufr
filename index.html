@@ -18,11 +18,11 @@
             <div class="setting">
                 <label for="mode-select">Mode</label>
                 <select id="mode-select" onchange="saveSettings(true)">
-                    <option value="rc">Random + Corner</option>
+                    <option value="r">Random</option>
                     <option value="ec">Edge + Corner</option>
+                    <option value="rc">Random + Corner</option>
                     <option value="e">Edge</option>
                     <option value="c">Corner</option>
-                    <option value="r">Random</option>
                 </select>
             </div>
             <div class="setting">
@@ -31,31 +31,36 @@
             </div>
             <div class="setting">
                 <label for="lr-slider" style="width: 200px;">Learning Rate</label>
-                <input type="range" min="0" max="30" value="20" step="1" id="lr-slider" onchange="saveSettings()" oninput="updateLRDisplay()" />
-                <span id="lr-value" class="slider-value">0.1</span>
+                <input type="range" min="0" max="30" value="15" step="1" id="lr-slider" onchange="saveSettings()" oninput="updateLRDisplay()" />
+                <span id="lr-value" class="slider-value">0.100</span>
             </div>
             <div class="setting">
-                <label for="ff-slider" style="width: 200px;">Fall Off Rate</label>
-                <input type="range" min="0.1" max="2" value="1" step="0.1" id="ff-slider" onchange="saveSettings()" oninput="document.getElementById('ff-value').innerText = this.value" />
-                <span id="ff-value" class="slider-value">1</span>
+                <label for="mb-slider" style="width: 200px;">Mark Boost</label>
+                <input type="range" min="1" max="10" value="1" step="1" id="mb-slider" onchange="saveSettings()" oninput="document.getElementById('mb-value').innerText = this.value" />
+                <span id="mb-value" class="slider-value">1</span>
             </div>
             <div class="setting">
-                <label for="ft-slider" style="width: 200px;">Flip/Twist</label>
-                <input type="range" min="0" max="1" value="0" step="0.1" id="ft-slider" onchange="saveSettings()" oninput="document.getElementById('ft-value').innerText = this.value" />
-                <span id="ft-value" class="slider-value">0</span>
+                <label for="flipTwist-slider" style="width: 200px;">Flip/Twist</label>
+                <input type="range" min="0" max="1" value="0" step="0.1" id="flipTwist-slider" onchange="saveSettings()" oninput="document.getElementById('flipTwist-value').innerText = this.value" />
+                <span id="flipTwist-value" class="slider-value">0</span>
             </div>
             <div class="setting">
-                <label for="ft2-slider" style="width: 200px;">3-Twist</label>
-                <input type="range" min="0" max="1" value="0" step="0.1" id="ft2-slider" onchange="saveSettings()" oninput="document.getElementById('ft2-value').innerText = this.value" />
-                <span id="ft2-value" class="slider-value">0</span>
+                <label for="twist3-slider" style="width: 200px;">3-Twist</label>
+                <input type="range" min="0" max="1" value="0" step="0.1" id="twist3-slider" onchange="saveSettings()" oninput="document.getElementById('twist3-value').innerText = this.value" />
+                <span id="twist3-value" class="slider-value">0</span>
             </div>
             <div class="setting">
-                <label for="fl-slider" style="width: 200px;">Float</label>
-                <input type="range" min="0" max="1" value="0" step="0.1" id="fl-slider" onchange="saveSettings()" oninput="document.getElementById('fl-value').innerText = this.value" />
-                <span id="fl-value" class="slider-value">0</span>
+                <label for="float3-slider" style="width: 200px;">Float</label>
+                <input type="range" min="0" max="1" value="0" step="0.1" id="float3-slider" onchange="saveSettings()" oninput="document.getElementById('float3-value').innerText = this.value" />
+                <span id="float3-value" class="slider-value">0</span>
             </div>
             <div id="tiny-line" style="text-align: center; color: #E0E0E0; font-size: 0.8em; margin: 10px 0;"></div>
+            <div style="text-align: center; color: #888; font-size: 0.7em; margin-top: 15px; line-height: 1.3;">
+                © 2025-2026 | Xi Lu | GPLv3 |
+                <a href="https://github.com/helloluxi/ufufr" target="_blank" style="color: #888; text-decoration: none;">Github Repo</a>
+            </div>
         </div>
+        <button id="tutorial-restart-btn" onclick="restartTutorial()">Tutorial & Setup</button>
         <button id="back-button" onclick="toggleSettingsPanel()">Back</button>
     </div>
     <div class="canvas" id="canvas">
@@ -77,30 +82,160 @@
         <div id="timer-display">0.00</div>
     </div>
 
+    <!-- 4-Panel Tutorial System -->
     <div id="tutorial-modal" class="modal">
-        <div class="modal-content">
-            <h2>Welcome to Lu Timer! 👋</h2>
-            <div class="tutorial-text">
-                <p><strong>The Philosophy:</strong> Efficient training through <em>adaptive frequency</em>. Cases you struggle with will appear more often in practice.</p>
-                
-                <p><strong>Quick Start Guide:</strong></p>
-                <ul>
-                    <li><strong>Open Settings:</strong> Double-click or tap the scramble text / press <code>`</code> key</li>
-                    <li><strong>Start Timer:</strong> Long-press the cube / press space key</li>
-                    <li><strong>Next Scramble:</strong> Press <code>Tab</code> / click "Next →"</li>
-                    <li>Click buttons to mark hard cases.</li>
-                </ul>
-                <p><strong>⭐ Highly Recommended:</strong> Fork this repository and customize it as you like!</p>
-                <p>
-                    <a href="https://github.com/helloluxi/ufufr" target="_blank" style="color: #4A9EFF; text-decoration: none;">📖 View GitHub Repo & Full README</a>
-                </p>
+        <div class="modal-content" style="max-width: 800px;">
+            <!-- Panel 1: Welcome -->
+            <div id="tutorial-panel-1" class="tutorial-panel">
+                <h2>👋 Welcome to Lu Timer!</h2>
+                <div class="tutorial-text">
+
+                    <p>Efficient training through <em>adaptive frequency</em>.</p>
+                    <p>Cases you struggle with will appear more often in practice.</p>
+                </div>
             </div>
-            <button id="tutorial-close-btn" onclick="closeTutorial()">Got it!</button>
+            
+            <!-- Panel 2: Setup Configs -->
+            <div id="tutorial-panel-2" class="tutorial-panel" style="display: none;">
+                <h2>⚙️ Setup Your Configuration</h2>
+                <div class="tutorial-text">
+                    <div class="setting">
+                        <label for="orientation-select">Orientation (Top - Front)</label>
+                        <select id="orientation-select" style="flex: 0 0 310px;">
+                            <option value="yr">Yellow - Red</option>
+                            <option value="yo">Yellow - Orange</option>
+                            <option value="yb">Yellow - Blue</option>
+                            <option value="yg">Yellow - Green</option>
+                            <option value="wr">White  - Red</option>
+                            <option value="wo">White  - Orange</option>
+                            <option value="wb">White  - Blue</option>
+                            <option value="wg">White  - Green</option>
+                            <option value="ry">Red    - Yellow</option>
+                            <option value="rw">Red    - White</option>
+                            <option value="rb">Red    - Blue</option>
+                            <option value="rg">Red    - Green</option>
+                            <option value="oy">Orange - Yellow</option>
+                            <option value="ow">Orange - White</option>
+                            <option value="ob">Orange - Blue</option>
+                            <option value="og">Orange - Green</option>
+                            <option value="by">Blue   - Yellow</option>
+                            <option value="bw">Blue   - White</option>
+                            <option value="br">Blue   - Red</option>
+                            <option value="bo">Blue   - Orange</option>
+                            <option value="gy">Green  - Yellow</option>
+                            <option value="gw">Green  - White</option>
+                            <option value="gr">Green  - Red</option>
+                            <option value="go">Green  - Orange</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label style="flex: 0 0 150px;">Buffers</label>
+                        <div style="display: flex; gap: 10px; flex: 0 0 280px;">
+                            <select id="edge-buffer-select" style="flex: 1;">
+                                <option value="0">UF</option>
+                                <option value="1">UL</option>
+                                <option value="2">UB</option>
+                                <option value="3">UR</option>
+                                <option value="4">DF</option>
+                                <option value="5">DL</option>
+                                <option value="6">DB</option>
+                                <option value="7">DR</option>
+                                <option value="8">FR</option>
+                                <option value="9">FL</option>
+                                <option value="10">BL</option>
+                                <option value="11">BR</option>
+                            </select>
+                            <select id="corner-buffer-select" style="flex: 1;">
+                                <option value="0">UFR</option>
+                                <option value="1">UFL</option>
+                                <option value="2">UBL</option>
+                                <option value="3">UBR</option>
+                                <option value="4">DFL</option>
+                                <option value="5">DBL</option>
+                                <option value="6">DBR</option>
+                                <option value="7">DFR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting">
+                        <label for="edge-scheme-input">Edge Letter Scheme</label>
+                        <input type="text" id="edge-scheme-input" value="" maxlength="24" style="flex: 0 0 280px; font-family: monospace; font-size: 0.9em; text-align: left;" placeholder="Enter 24 letters..." />
+                    </div>
+                    <div class="setting">
+                        <label for="corner-scheme-input">Corner Letter Scheme</label>
+                        <input type="text" id="corner-scheme-input" value="" maxlength="24" style="flex: 0 0 280px; font-family: monospace; font-size: 0.9em; text-align: left;" placeholder="Enter 24 letters..." />
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel 3: Algs & Memos -->
+            <div id="tutorial-panel-3" class="tutorial-panel" style="display: none;">
+                <h2>📚 Configure Your Algs & Memos</h2>
+                <div class="tutorial-text">
+                    <p>Upload your own algorithm and memo files, or download auto-generated templates based on your letter schemes and buffers:</p>
+                    
+                    <div class="file-config-section">
+                        <div class="file-config-row">
+                            <span class="file-label">Algs</span>
+                            <div class="file-actions">
+                                <button id="download-alg-btn" onclick="downloadAlgTemplate()" class="download-btn">Download Template</button>
+                                <input type="file" id="upload-alg" accept=".txt" style="display: none;" onchange="uploadAlgFile(event)" />
+                                <button onclick="document.getElementById('upload-alg').click()" class="upload-btn">Upload</button>
+                            </div>
+                        </div>
+                        
+                        <div class="file-config-row">
+                            <span class="file-label">Memo</span>
+                            <div class="file-actions">
+                                <button id="download-mem-btn" onclick="downloadMemTemplate()" class="download-btn">Download Template</button>
+                                <input type="file" id="upload-mem" accept=".txt" style="display: none;" onchange="uploadMemFile(event)" />
+                                <button onclick="document.getElementById('upload-mem').click()" class="upload-btn">Upload</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p style="font-size: 0.9em; color: #888; margin-top: 20px;">These files are optional. Templates are auto-generated based on your letter schemes and buffers.</p>
+                </div>
+            </div>
+            
+            <!-- Panel 4: Quick Start -->
+            <div id="tutorial-panel-4" class="tutorial-panel" style="display: none;">
+                <h2>🚀 Quick Start Guide</h2>
+                <div class="tutorial-text">
+                    <ul style="font-size: 1.1em; line-height: 1.6;">
+                        <li><strong>Open Settings:</strong> Double-click or tap the scramble text / press <code>`</code> key</li>
+                        <li><strong>Start Timer:</strong> Long-press the cube / press (time history is not saved)</li>
+                        <li><strong>Next Scramble:</strong> Press <code>Tab</code> / click "Next →"</li>
+                        <li><strong>Mark Cases:</strong> Click buttons to mark hard cases for more frequent practice</li>
+                        <li><strong>Important:</strong> Scramble in your solving orientation, not WCA default (white-green)</li>
+                        <li style="margin: 10px 0;">View <a href="https://github.com/helloluxi/ufufr" target="_blank" style="color: #4A9EFF; text-decoration: none;">GitHub Repo & Full README</a></li>
+                    </ul>
+                    
+                    <p>⭐ Highly Recommended: This is more of a customizable codebase than a polished product. Fork this repository and make it yours!</p>
+                    
+                    <p style="text-align: center; margin-top: 30px; font-size: 1.2em;">
+                        <strong>Happy BLDing!</strong> &nbsp;&nbsp;&mdash; Xi Lu
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <div class="tutorial-navigation">
+                <div class="tutorial-dots">
+                    <span class="tutorial-dot active" onclick="tutorialGoTo(1)"></span>
+                    <span class="tutorial-dot" onclick="tutorialGoTo(2)"></span>
+                    <span class="tutorial-dot" onclick="tutorialGoTo(3)"></span>
+                    <span class="tutorial-dot" onclick="tutorialGoTo(4)"></span>
+                </div>
+                <button id="tutorial-next-btn" onclick="tutorialNavigate(1)">Next →</button>
+            </div>
         </div>
     </div>
 
 <script src="min2phase.js"></script>
+<script src="prefs.js"></script>
 <script src="cube3.js"></script>
+<script src="tutorial.js"></script>
 <script src="ufufr.js"></script>
 </body>
 </html>

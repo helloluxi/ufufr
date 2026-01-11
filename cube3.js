@@ -1,28 +1,25 @@
 
 class Cube3 {
     // ====================================
-    // Localization Preferences
+    // Localization Preferences (now loaded from Prefs)
     // ====================================
     
-    // UF FU UL LU UB BU UR RU
-    // DF FD DL LD DB BD DR RD
-    // FR RF FL LF BL LB BR RB
-    static edgeLetterScheme = 'ABCDEFGHIJKLMNOPQRSTWXYZ';
-
-    // UFR RUF FUR UFL FUL LUF
-    // UBL LUB BUL UBR BUR RUB
-    // DFL LDF FDL DBL BDL LDB
-    // DBR BRD RDB DFR FDR RDF
-    static cornLetterScheme = 'ahqcbtedwgfzilsknxmpyojr';
+    // Use Prefs as the source of truth for letter schemes and buffers
+    static get edgeLetterScheme() {
+        return Prefs.current.edgeScheme;
+    }
     
-    // 0: UF, 1: UL, 2: UB, 3: UR
-    // 4: DF, 5: DL, 6: DB, 7: DR
-    // 8: FR, 9: FL, 10: BL, 11: BR
-    static edgeBufferIdx = 0;
-
-    // 0: UFR, 1: UFL, 2: UBL, 3: UBR
-    // 4: DFL, 5: DBL, 6: DBR, 7: DFR
-    static cornBufferIdx = 0;
+    static get cornLetterScheme() {
+        return Prefs.current.cornerScheme;
+    }
+    
+    static get edgeBufferIdx() {
+        return Prefs.current.edgeBuffer;
+    }
+    
+    static get cornBufferIdx() {
+        return Prefs.current.cornerBuffer;
+    }
     
     // ====================================
     // Internal Constants
@@ -33,7 +30,7 @@ class Cube3 {
     static eFaces = ['uf', 'ul', 'ub', 'ur', 'df', 'dl', 'db', 'dr', 'fr', 'fl', 'bl', 'br'];
 
     constructor() {
-        // Cube constants
+        // Build index mappings from current Prefs configuration
         this.edgeIdx = {};
         this.cornIdx = {};
         this.fullIdx = {};
@@ -42,8 +39,7 @@ class Cube3 {
             this.fullIdx[Cube3.cornLetterScheme[i]] = (this.cornIdx[Cube3.cornLetterScheme[i]] = (i / 3) | 0) + 12;
         }
 
-        // Stats and training data
-        this.stats = {};
+        // Initialize all properties
         this.algs = {};
         this.memDict = {};
         this.eKeys = [];
@@ -52,22 +48,23 @@ class Cube3 {
         this.occupied = null;
         this.hasSpecialCategories = false;
 
-        // Load settings
-        const settingsStr = localStorage.getItem('bld.settings');
-        let settings = {};
-        if (settingsStr) {
-            settings = JSON.parse(settingsStr);
-        }
-        this.lr = settings.lr || 0.1;
-        this.falloff = settings.falloff || 1;
-        this.mode = settings.mode || 'r';
-        this.usePar = settings.usePar !== false;
-        this.ft2Weight = settings.ft2Weight || 0;
-        this.ftWeight = settings.ftWeight || 0;
-        this.flWeight = settings.flWeight || 0;
+        // Load settings from Prefs
+        const settings = Prefs.getSettings();
+        this.lr = settings.lr;
+        this.markBoost = settings.markBoost;
+        this.mode = settings.mode;
+        this.usePar = settings.usePar;
+        this.twist3 = settings.twist3;
+        this.flipTwist = settings.flipTwist;
+        this.float3 = settings.float3;
 
-        // Initialize stats
+        // Load stats from localStorage
+        const statsStr = localStorage.getItem('bld.stats');
+        this.stats = {};
         this.initEmptyStats();
+        if (statsStr && statsStr.trim().length > 0) {
+            this.updateStats(statsStr);
+        }
     }
 
     isEdge(c) {
@@ -84,21 +81,23 @@ class Cube3 {
 
     updateSettings(settings) {
         this.lr = settings.lr || this.lr;
-        this.falloff = settings.falloff || this.falloff;
+        this.markBoost = settings.markBoost || this.markBoost;
         this.mode = settings.mode || this.mode;
-        this.ft2Weight = settings.ft2Weight || this.ft2Weight;
-        this.ftWeight = settings.ftWeight || this.ftWeight;
-        this.flWeight = settings.flWeight || this.flWeight;
+        this.twist3 = settings.twist3 || this.twist3;
+        this.flipTwist = settings.flipTwist || this.flipTwist;
+        this.float3 = settings.float3 || this.float3;
         this.usePar = settings.usePar != null ? settings.usePar : this.usePar;
-        localStorage.setItem('bld.settings', JSON.stringify({
+        
+        // Update Prefs
+        Prefs.updateSettings({
             lr: this.lr,
-            falloff: this.falloff,
+            markBoost: this.markBoost,
             mode: this.mode,
             usePar: this.usePar,
-            ft2Weight: this.ft2Weight,
-            ftWeight: this.ftWeight,
-            flWeight: this.flWeight
-        }));
+            twist3: this.twist3,
+            flipTwist: this.flipTwist,
+            float3: this.float3
+        });
     }
 
     initEmptyStats() {
@@ -150,18 +149,14 @@ class Cube3 {
     cycleCube(cubeArr, code) {
         if (this.isEdge(code)) {
             let i = Cube3.edgeLetterScheme.indexOf(code);
-            this.swap(cubeArr, Cube3.edgeIdxOnCube[0], Cube3.edgeIdxOnCube[i]);
-            this.swap(cubeArr, Cube3.edgeIdxOnCube[1], Cube3.edgeIdxOnCube[i ^ 1]);
+            this.swap(cubeArr, Cube3.edgeIdxOnCube[Cube3.edgeBufferIdx*2], Cube3.edgeIdxOnCube[i]);
+            this.swap(cubeArr, Cube3.edgeIdxOnCube[Cube3.edgeBufferIdx*2+1], Cube3.edgeIdxOnCube[i ^ 1]);
         } else if (this.isCorner(code)) {
             let i = Cube3.cornLetterScheme.indexOf(code);
-            this.swap(cubeArr, Cube3.cornIdxOnCube[0], Cube3.cornIdxOnCube[i]);
-            this.swap(cubeArr, Cube3.cornIdxOnCube[1], Cube3.cornIdxOnCube[((i / 3) | 0) * 3 + (i + 1) % 3]);
-            this.swap(cubeArr, Cube3.cornIdxOnCube[2], Cube3.cornIdxOnCube[((i / 3) | 0) * 3 + (i + 2) % 3]);
+            this.swap(cubeArr, Cube3.cornIdxOnCube[Cube3.cornBufferIdx*3], Cube3.cornIdxOnCube[i]);
+            this.swap(cubeArr, Cube3.cornIdxOnCube[Cube3.cornBufferIdx*3+1], Cube3.cornIdxOnCube[((i / 3) | 0) * 3 + (i + 1) % 3]);
+            this.swap(cubeArr, Cube3.cornIdxOnCube[Cube3.cornBufferIdx*3+2], Cube3.cornIdxOnCube[((i / 3) | 0) * 3 + (i + 2) % 3]);
         }
-        // else if (code > '0' && code < '6') {
-        //     let i = parseInt(code);
-        //     this.swap(cubeArr, 4, 4 + 9 * i);
-        // }
     }
 
     invCycleCube(cube, bfCode) {
@@ -243,7 +238,7 @@ class Cube3 {
     getWeight(key) {
         const stat = this.stats[key];
         if (!stat) return 0;
-        return stat.times === 0 ? (stat.mark === 0 ? this.lr : 1) : Math.pow(stat.times, -2 / (1 + stat.mark * this.falloff));
+        return stat.times === 0 ? this.lr : (stat.mark ? this.markBoost : 1) * Math.pow(stat.times, -2 / (1 + stat.mark));
     }
 
     genCode(cat, maxCount, resList) {
@@ -363,10 +358,10 @@ class Cube3 {
             }
             if (scrambleE && !modeRC) {
                 let sfE = [];
-                if (Math.random() < this.ftWeight) {
+                if (Math.random() < this.flipTwist) {
                     this.genCode('e+', 1, sfE); // E Flip
                 }
-                if (Math.random() < this.flWeight) {
+                if (Math.random() < this.float3) {
                     this.genCode('e3', 1, sfE); // Float E3
                 }
                 this.genCode('e', 999, this.eKeys); // Normal E3, must be last
@@ -376,12 +371,12 @@ class Cube3 {
             }
             if (scrambleC) {
                 let sfC = [], sfTwist = [];
-                if (Math.random() < this.flWeight) {
+                if (Math.random() < this.float3) {
                     this.genCode('c3', 1, sfC); // Float C3
                 }
-                if (Math.random() < this.ft2Weight) {
+                if (Math.random() < this.twist3) {
                     this.genCode('c++', 1, sfTwist); // C 3-Twist
-                } else if (Math.random() < this.ftWeight) {
+                } else if (Math.random() < this.flipTwist) {
                     this.genCode('c+', 1, sfTwist); // C 2-Twist
                 }
                 this.genCode('c', 999, this.cKeys); // Normal C3, must be last

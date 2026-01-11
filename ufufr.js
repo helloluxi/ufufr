@@ -5,13 +5,16 @@ function print(str){
 
 function forceUpdate() {
     if (navigator.serviceWorker.controller){
+        navigator.serviceWorker.addEventListener('message', event => {
+            if (event.data === 'reload') {
+                location.reload();
+            }
+        }, { once: true });
+        
         navigator.serviceWorker.controller.postMessage('ud');
     } else {
         print('Service worker not ready.');
     }
-    setTimeout(() => {
-        location.reload();
-    }, 1000);
 }
 
 // DrawCube class for handling cube visualization
@@ -30,9 +33,152 @@ class DrawCube {
         this.faceSize = 3 * this.size + 10;
         this.svgNS = "http://www.w3.org/2000/svg";
         this.pieces = [];
+        this.orientationMapping = null;
         
         this.initializeCube(containerId);
         this.setupEventListeners();
+        this.loadOrientation();
+    }
+    
+    // Refresh orientation from Prefs (called after tutorial)
+    refresh() {
+        this.loadOrientation();
+    }
+    
+    // Load orientation from Prefs
+    loadOrientation() {
+        if (window.Prefs) {
+            const orientation = Prefs.getOrientation();
+            if (orientation) {
+                this.orientationMapping = this.getOrientationMapping(orientation);
+            }
+        } else {
+            // Fallback to localStorage
+            const savedConfig = localStorage.getItem('bld.userPrefs');
+            if (savedConfig) {
+                try {
+                    const config = JSON.parse(savedConfig);
+                    if (config.orientation) {
+                        this.orientationMapping = this.getOrientationMapping(config.orientation);
+                    }
+                } catch (e) {
+                    console.error('Error loading orientation:', e);
+                }
+            }
+        }
+    }
+    
+    // Get orientation mapping for remapping cube string
+    // Standard WCA: White bottom (d), Yellow top (u), Red front (f), Orange back (b), Blue left (l), Green right (r)
+    // Returns index mapping array where result[standard_index] = user_orientation_index
+    getOrientationMapping(orientation) {
+        // Cube string layout (54 stickers):
+        // U (top): 0-8, R (right): 9-17, F (front): 18-26, D (bottom): 27-35, L (left): 36-44, B (back): 45-53
+        // Each face: row-major order (top-left to bottom-right)
+        
+        // Parse orientation string: "yr" means top=yellow, front=red (2 chars: color codes)
+        const topColor = orientation[0];  // y, w, r, o, b, g
+        const frontColor = orientation[1];
+        
+        // Color to standard face mapping (what face each color is on in standard orientation)
+        const colorToFace = {
+            'y': 'u',  // yellow on up face
+            'w': 'd',  // white on down face
+            'r': 'f',  // red on front face
+            'o': 'b',  // orange on back face
+            'b': 'l',  // blue on left face
+            'g': 'r'   // green on right face
+        };
+        
+        // Map user's orientation to standard face positions
+        const userTop = colorToFace[topColor];
+        const userFront = colorToFace[frontColor];
+        
+        if (!userTop || !userFront) {
+            console.error('Invalid orientation:', orientation);
+            return null;
+        }
+        
+        // Standard cube face positions (indices in 54-char string)
+        const faceRanges = {
+            'u': [0, 9],    // top/up
+            'r': [9, 18],   // right
+            'f': [18, 27],  // front
+            'd': [27, 36],  // down/bottom
+            'l': [36, 45],  // left
+            'b': [45, 54]   // back
+        };
+        
+        // Determine all 6 faces based on top and front
+        const oppositeFace = {
+            'u': 'd', 'd': 'u',
+            'f': 'b', 'b': 'f',
+            'l': 'r', 'r': 'l'
+        };
+        
+        const userBottom = oppositeFace[userTop];
+        const userBack = oppositeFace[userFront];
+        
+        // Determine left and right based on top and front
+        // This uses right-hand rule for cube orientation
+        const getFaces = (top, front) => {
+            const configs = {
+                'uf': { left: 'l', right: 'r' },
+                'ub': { left: 'r', right: 'l' },
+                'ul': { left: 'b', right: 'f' },
+                'ur': { left: 'f', right: 'b' },
+                'df': { left: 'r', right: 'l' },
+                'db': { left: 'l', right: 'r' },
+                'dl': { left: 'f', right: 'b' },
+                'dr': { left: 'b', right: 'f' },
+                'fu': { left: 'r', right: 'l' },
+                'fd': { left: 'l', right: 'r' },
+                'fl': { left: 'u', right: 'd' },
+                'fr': { left: 'd', right: 'u' },
+                'bu': { left: 'l', right: 'r' },
+                'bd': { left: 'r', right: 'l' },
+                'bl': { left: 'd', right: 'u' },
+                'br': { left: 'u', right: 'd' },
+                'lu': { left: 'f', right: 'b' },
+                'ld': { left: 'b', right: 'f' },
+                'lf': { left: 'd', right: 'u' },
+                'lb': { left: 'u', right: 'd' },
+                'ru': { left: 'b', right: 'f' },
+                'rd': { left: 'f', right: 'b' },
+                'rf': { left: 'u', right: 'd' },
+                'rb': { left: 'd', right: 'u' }
+            };
+            return configs[top + front];
+        };
+        
+        const sides = getFaces(userTop, userFront);
+        const userLeft = sides.left;
+        const userRight = sides.right;
+        
+        // Create the remapping array (standard position -> user position)
+        const mapping = new Array(54);
+        const userFaceOrder = {
+            'u': userTop,
+            'r': userRight,
+            'f': userFront,
+            'd': userBottom,
+            'l': userLeft,
+            'b': userBack
+        };
+        
+        // For each standard position, find the corresponding user position
+        for (let standardFace in faceRanges) {
+            const [start, end] = faceRanges[standardFace];
+            const userFace = userFaceOrder[standardFace];
+            const [userStart, userEnd] = faceRanges[userFace];
+            
+            // Simple 1-to-1 mapping (could be enhanced with rotation handling)
+            for (let i = 0; i < 9; i++) {
+                mapping[start + i] = userStart + i;
+            }
+        }
+        
+        return mapping;
     }
     
     initializeCube(containerId) {
@@ -73,8 +219,20 @@ class DrawCube {
     }
     
     updatePieceColors(str) {
-        for (let i = 0; i < str.length; i++) {
-            this.pieces[i].setAttribute("fill", this.colorMapping[str[i]]);
+        let displayStr = str;
+        
+        // Apply orientation mapping if configured
+        if (this.orientationMapping) {
+            const strArr = str.split('');
+            const mappedArr = new Array(54);
+            for (let i = 0; i < 54; i++) {
+                mappedArr[i] = strArr[this.orientationMapping[i]];
+            }
+            displayStr = mappedArr.join('');
+        }
+        
+        for (let i = 0; i < displayStr.length; i++) {
+            this.pieces[i].setAttribute("fill", this.colorMapping[displayStr[i]]);
         }
     }
     
@@ -125,13 +283,45 @@ class StorageHandler {
     }
     
     async getItem(key, func) {
-        // For static files (alg.txt and mem.txt), load them directly
-        if (key === 'alg' || key === 'mem') {
-            const text = await this.loadStaticFile(`${key}.txt`);
+        // For alg, check localStorage first, then fall back to alg.txt for default UF-UFR buffer
+        if (key === 'alg') {
+            const savedAlg = localStorage.getItem('bld.alg');
+            if (savedAlg) {
+                func(savedAlg);
+                return;
+            }
+            // Fall back to alg.txt for default UF-UFR buffer case
+            const text = await this.loadStaticFile('alg.txt');
             if (text) {
+                // Check if using default UF-UFR buffer
+                const config = localStorage.getItem('bld.userPrefs');
+                if (config) {
+                    try {
+                        const parsed = JSON.parse(config);
+                        if (parsed.edgeBuffer === '0' && parsed.cornerBuffer === '0' && 
+                            parsed.edgeScheme && parsed.cornerScheme) {
+                            // Map alg.txt to user's letter scheme
+                            const mappedAlg = await this.mapAlgToUserScheme(text, parsed.edgeScheme, parsed.cornerScheme);
+                            func(mappedAlg);
+                            return;
+                        }
+                    } catch (e) {
+                        console.error('Error mapping alg.txt:', e);
+                    }
+                }
+                // Use alg.txt as-is if no mapping needed
                 func(text);
                 return;
             }
+        }
+        
+        // For mem, only use localStorage (no file fallback)
+        if (key === 'mem') {
+            const savedMem = localStorage.getItem('bld.mem');
+            if (savedMem) {
+                func(savedMem);
+            }
+            return;
         }
         
         // For other data (stats, settings), use localStorage
@@ -139,6 +329,61 @@ class StorageHandler {
         if (savedItem) {
             func(savedItem);
         }
+    }
+    
+    async mapAlgToUserScheme(algContent, userEdgeScheme, userCornerScheme) {
+        // Default letter schemes from alg.txt template (UF-UFR buffer)
+        // These are ONLY used for mapping the template file, not for actual usage
+        const defaultEdgeScheme = Prefs.defaults.edgeScheme;
+        const defaultCornerScheme = Prefs.defaults.cornerScheme;
+        
+        // Create mapping from default to user scheme
+        const edgeMapping = {};
+        const cornerMapping = {};
+        
+        for (let i = 0; i < 24; i++) {
+            edgeMapping[defaultEdgeScheme[i]] = userEdgeScheme[i];
+            cornerMapping[defaultCornerScheme[i]] = userCornerScheme[i];
+        }
+        
+        // Parse and remap letters
+        const lines = algContent.split('\n');
+        const mappedLines = [];
+        
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.length === 0) continue;
+            
+            const eqIdx = trimmed.indexOf('=');
+            if (eqIdx === -1) continue;
+            
+            const key = trimmed.substring(0, eqIdx).trim();
+            const alg = trimmed.substring(eqIdx + 1).trim();
+            
+            // Map the key letters
+            let mappedKey = '';
+            for (const char of key) {
+                if (edgeMapping[char]) {
+                    mappedKey += edgeMapping[char];
+                } else if (cornerMapping[char]) {
+                    mappedKey += cornerMapping[char];
+                } else {
+                    mappedKey += char; // Keep special chars like +, -
+                }
+            }
+            
+            mappedLines.push({ key: mappedKey, alg: alg });
+        }
+        
+        // Sort by key
+        mappedLines.sort((a, b) => {
+            if (a.key < b.key) return -1;
+            if (a.key > b.key) return 1;
+            return 0;
+        });
+        
+        // Generate output content
+        return mappedLines.map(line => `${line.key}=${line.alg}`).join('\n');
     }
     
     push(cat, text) {
@@ -177,6 +422,7 @@ class ButtonRow {
     showHoverText(event) {
         const hoverText = document.createElement('div');
         hoverText.className = 'hover-text';
+        hoverText.style.display = 'block'; // Force display for focus events
         hoverText.innerHTML = cube3.getAlgInfo(event.target.textContent).join('<br>');
         event.target.appendChild(hoverText);
     }
@@ -197,8 +443,11 @@ class ButtonRow {
             if (!(cube3.stats[text].cat === 'par' && cube3.hasSpecialCategories)) {
                 button.onclick = function() { this.classList.toggle('active'); };
             }
-            button.addEventListener('mouseover', (e) => this.showHoverText(e));
-            button.addEventListener('mouseout', (e) => this.hideHoverText(e));
+            
+            // Unified hover system using focus/blur
+            button.addEventListener('mouseover', (e) => e.target.focus());
+            button.addEventListener('focus', (e) => this.showHoverText(e));
+            button.addEventListener('blur', (e) => this.hideHoverText(e));
             
             if (cube3.stats[text].mark > 0) {
                 button.classList.add('non-zero-mark');
@@ -316,12 +565,32 @@ class Timer {
     }
 }
 
-const cube3 = new Cube3();
+// Prefs is initialized automatically when prefs.js loads
+// Cube3 will be initialized after tutorial is completed
+
+let cube3 = null; // Initialize only after tutorial
 const drawCube = new DrawCube('rubiksCubeContainer');
 const storage = new StorageHandler();
 const buttonRow = new ButtonRow('.button-row');
 const timer = new Timer('canvas', 'timer-container', 'timer-display', 'command-output');
 let scrElem = document.querySelector('.title');
+
+// Initialize Cube3 - called after tutorial completion
+function initializeCube3() {
+    cube3 = new Cube3();
+    window.cube3 = cube3; // Also expose globally
+    console.log('Cube3 initialized with edge scheme:', Prefs.current.edgeScheme);
+    
+    // Load stored data
+    if (storage && typeof storage.loadData === 'function') {
+        storage.loadData();
+    }
+    
+    // Reset buttons
+    if (buttonRow && typeof buttonRow.resetButtons === 'function') {
+        buttonRow.resetButtons();
+    }
+}
 
 // Helper functions for logarithmic learning rate scale (0.001 to 1)
 function lrToSlider(lr) {
@@ -348,16 +617,16 @@ function toggleSettingsPanel() {
     if (panel.style.display === 'flex') {
         document.getElementById('mode-select').value = cube3.mode;
         document.getElementById('parity-ckbx').checked = cube3.usePar;
-        document.getElementById('ft-slider').value = cube3.ftWeight;
-        document.getElementById('ft2-slider').value = cube3.ft2Weight;
-        document.getElementById('fl-slider').value = cube3.flWeight;
+        document.getElementById('flipTwist-slider').value = cube3.flipTwist;
+        document.getElementById('twist3-slider').value = cube3.twist3;
+        document.getElementById('float3-slider').value = cube3.float3;
         document.getElementById('lr-slider').value = lrToSlider(cube3.lr);
-        document.getElementById('ff-slider').value = cube3.falloff;
-        document.getElementById('ft-value').innerText = cube3.ftWeight;
-        document.getElementById('ft2-value').innerText = cube3.ft2Weight;
-        document.getElementById('fl-value').innerText = cube3.flWeight;
+        document.getElementById('mb-slider').value = cube3.markBoost;
+        document.getElementById('flipTwist-value').innerText = cube3.flipTwist;
+        document.getElementById('twist3-value').innerText = cube3.twist3;
+        document.getElementById('float3-value').innerText = cube3.float3;
         document.getElementById('lr-value').innerText = cube3.lr.toFixed(3);
-        document.getElementById('ff-value').innerText = cube3.falloff;
+        document.getElementById('mb-value').innerText = cube3.markBoost;
         
         const filtered = Object.keys(cube3.stats).filter(key => cube3.is818(key) && cube3.stats[key].times > 0);
         const progress = filtered.length;
@@ -374,11 +643,11 @@ function saveSettings(genScr=false) {
     const newSettings = {
         mode: document.getElementById('mode-select').value,
         usePar: document.getElementById('parity-ckbx').checked,
-        ftWeight: parseFloat(document.getElementById('ft-slider').value),
-        ft2Weight: parseFloat(document.getElementById('ft2-slider').value),
-        flWeight: parseFloat(document.getElementById('fl-slider').value),
+        flipTwist: parseFloat(document.getElementById('flipTwist-slider').value),
+        twist3: parseFloat(document.getElementById('twist3-slider').value),
+        float3: parseFloat(document.getElementById('float3-slider').value),
         lr: sliderToLR(parseFloat(document.getElementById('lr-slider').value)),
-        falloff: parseFloat(document.getElementById('ff-slider').value)
+        markBoost: parseFloat(document.getElementById('mb-slider').value)
     };
     cube3.updateSettings(newSettings);
     storage.push('settings', JSON.stringify(newSettings));
@@ -422,6 +691,19 @@ textInput.addEventListener('blur', () => {
     commandInputElem.classList.remove('visible');
 });
 document.addEventListener('keydown', function(event) {
+    // Don't interfere with tutorial navigation - check if tutorial is active
+    if (typeof currentPanel !== 'undefined' && currentPanel !== null) {
+        return;
+    }
+    
+    // Don't interfere with modal inputs
+    const tutorialModal = document.getElementById('tutorial-modal');
+    const configModal = document.getElementById('config-modal');
+    if ((tutorialModal && tutorialModal.style.display === 'block') || 
+        (configModal && configModal.style.display === 'block')) {
+        return;
+    }
+    
     if (timer.isTimerRunning) {
         event.preventDefault();
         timer.stopTimer();
@@ -458,7 +740,13 @@ document.addEventListener('keydown', function(event) {
         let idx = parseInt(event.key);
         if (idx < buttonRow.buttonRow.children.length) {
             let button = buttonRow.buttonRow.children[idx - 1];
-            if (button.classList.contains('toggle-btn')) {
+            if (button && button.classList.contains('toggle-btn')) {
+                // If already active, blur it; otherwise focus and activate it
+                if (button.classList.contains('active')) {
+                    button.blur();
+                } else {
+                    button.focus();
+                }
                 button.click();
             }
         }
@@ -545,29 +833,21 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await storage.loadData();
-    newScramble();
-    checkAndShowTutorial();
-});
-
-function checkAndShowTutorial() {
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if this is first time (tutorial not seen yet)
     const seenTutorial = localStorage.getItem('bld.seenTutorial');
+    
     if (!seenTutorial) {
-        const modal = document.getElementById('tutorial-modal');
-        if (modal) {
-            modal.style.display = 'block';
-        }
+        // First time - show welcome message and tutorial
+        document.querySelector('.title').innerText = 'Welcome! Please complete the tutorial to get started.';
+        checkAndShowTutorial();
+    } else {
+        // Returning user - create new Cube3 and generate scramble immediately
+        initializeCube3();
+        newScramble();
+        checkAndShowTutorial(); // Still allow access to tutorial
     }
-}
-
-function closeTutorial() {
-    const modal = document.getElementById('tutorial-modal');
-    if (modal) {
-        modal.style.display = 'none';
-        localStorage.setItem('bld.seenTutorial', '1');
-    }
-}
+});
 
 // Only register service worker if not running on localhost
 if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost') && window.location.hostname !== '127.0.0.1') {

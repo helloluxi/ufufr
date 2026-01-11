@@ -195,7 +195,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 360px;
-    height: 420px;
+    height: 480px;
     background-color: var(--bg-tertiary);
     border-radius: 20px;
     box-shadow: 0 10px 25px var(--shadow-strong);
@@ -266,7 +266,8 @@ body {
     width: 40px;
     text-align: right;
 }
-#back-button {
+#back-button,
+#tutorial-restart-btn {
     position: relative;
     bottom: 0;
     left: 50%;
@@ -280,7 +281,8 @@ body {
     transition: background-color 0.3s;
     margin-top: 10px;
 }
-#back-button:hover {
+#back-button:hover,
+#tutorial-restart-btn:hover {
     background-color: var(--border-primary);
 }
 #timer-container {
@@ -368,6 +370,13 @@ body {
     font-family: 'Courier New', monospace;
     color: var(--accent-orange);
 }
+.tutorial-text h3 {
+    color: var(--accent-primary);
+    margin: 25px 0 10px 0;
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
 .tutorial-text p {
     margin: 15px 0;
 }
@@ -393,4 +402,184 @@ body {
 }
 #tutorial-close-btn:active {
     transform: scale(0.98);
+}
+#config-close-btn {
+    display: block;
+    margin: 20px auto 0;
+    padding: 12px 40px;
+    background-color: var(--accent-primary);
+    color: var(--white);
+    border: none;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+}
+#config-close-btn:hover:not(:disabled) {
+    background-color: var(--accent-hover);
+    transform: scale(1.05);
+}
+#config-close-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+#config-close-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.modal-content input[type="text"],
+.modal-content select {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 1em;
+}
+.modal-content input[type="text"]:focus,
+.modal-content select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(65, 170, 255, 0.2);
+}
+
+/* 4-Panel Tutorial System */
+.tutorial-panel {
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.tutorial-panel h2 {
+    flex-shrink: 0;
+    margin-bottom: 20px;
+}
+
+.tutorial-panel .tutorial-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+.tutorial-panel .tutorial-text > * {
+    /* Compact grouping of tutorial content */
+}
+
+#tutorial-panel-1 {
+    align-items: center;
+    text-align: center;
+}
+
+#tutorial-panel-1 .tutorial-text {
+    text-align: center;
+}
+
+.tutorial-navigation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-primary);
+    gap: 20px;
+}
+
+.tutorial-dots {
+    display: flex;
+    gap: 10px;
+}
+
+.tutorial-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--border-primary);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.tutorial-dot.active {
+    background-color: var(--accent-primary);
+}
+
+.tutorial-dot:hover {
+    background-color: var(--accent-hover);
+}
+
+#tutorial-next-btn {
+    padding: 10px 20px;
+    background-color: var(--accent-primary);
+    color: var(--white);
+    border: none;
+    border-radius: 20px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+#tutorial-next-btn:hover {
+    background-color: var(--accent-hover);
+    transform: scale(1.05);
+}
+
+#tutorial-next-btn:active {
+    transform: scale(0.98);
+}
+
+/* File Configuration Styles */
+.file-config-section {
+    margin: 20px 0;
+}
+
+.file-config-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.file-label {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.file-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.download-btn,
+.upload-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    background-color: var(--accent-primary);
+    color: var(--white);
+}
+
+.download-btn:hover,
+.upload-btn:hover {
+    background-color: var(--accent-hover);
+    transform: scale(1.05);
+}
+
+.download-btn:active,
+.upload-btn:active {
+    transform: scale(0.98);
+}
+
+.upload-status {
+    font-size: 0.8em;
+    color: var(--accent-primary);
+    margin-left: 8px;
+    font-weight: bold;
 }
