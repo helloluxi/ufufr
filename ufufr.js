@@ -3,6 +3,68 @@ function print(str){
     document.querySelector('.text-output div').innerText = str;
 }
 
+const HISTORY_KEY = 'bld.history';
+const HISTORY_LIMIT = 100;
+
+function serializeKeyValueMap(dict) {
+    return Object.keys(dict)
+        .sort((a, b) => a.localeCompare(b))
+        .map(key => `${key}=${dict[key]}`)
+        .join('\n');
+}
+
+function parseKeyValueAssignment(text) {
+    const eqIdx = text.indexOf('=');
+    if (eqIdx <= 0) return null;
+    const key = text.slice(0, eqIdx).trim();
+    const value = text.slice(eqIdx + 1);
+    if (!key) return null;
+    return { key, value };
+}
+
+function swapCommutatorParts(alg) {
+    const m = alg.match(/^\s*\[([^,\]]+)\s*,\s*([^\]]+)\]\s*$/);
+    if (!m) return null;
+    return `[${m[2].trim()},${m[1].trim()}]`;
+}
+
+function loadSolveHistory() {
+    try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        console.error('Failed to parse solve history:', e);
+        return [];
+    }
+}
+
+function saveSolveHistory(history) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function appendSolveHistory(timeMs, scramble) {
+    const history = loadSolveHistory();
+    history.unshift({
+        ts: Date.now(),
+        time: Number((timeMs / 1000).toFixed(2)),
+        scramble: scramble || ''
+    });
+    if (history.length > HISTORY_LIMIT) {
+        history.pop();
+    }
+    saveSolveHistory(history);
+}
+
+function formatHistoryTimestamp(ts) {
+    return new Date(ts).toLocaleString('sv-SE').replace(',', '');
+}
+
+function formatHistoryEntry(entry) {
+    return `${entry.time.toFixed(2)}  ${entry.scramble}  @${formatHistoryTimestamp(entry.ts)}`;
+}
+
 function forceUpdate() {
     if (navigator.serviceWorker.controller){
         navigator.serviceWorker.addEventListener('message', event => {
@@ -512,6 +574,7 @@ class Timer {
             this.finalTimeStr = this.formatTime(finalTime);
             this.nowTimeStr = now.toLocaleString('sv-SE').replace('T', ' ');
             this.commandOutput.textContent = `Time: ${this.finalTimeStr}`;
+            appendSolveHistory(finalTime, scrElem ? scrElem.innerText : '');
             this.isTimerRunning = false;
         }
         this.timerContainer.style.display = 'none';
@@ -621,12 +684,10 @@ function toggleSettingsPanel() {
         document.getElementById('twist3-slider').value = cube3.twist3;
         document.getElementById('float3-slider').value = cube3.float3;
         document.getElementById('lr-slider').value = lrToSlider(cube3.lr);
-        document.getElementById('mb-slider').value = cube3.markBoost;
         document.getElementById('flipTwist-value').innerText = cube3.flipTwist;
         document.getElementById('twist3-value').innerText = cube3.twist3;
         document.getElementById('float3-value').innerText = cube3.float3;
         document.getElementById('lr-value').innerText = cube3.lr.toFixed(3);
-        document.getElementById('mb-value').innerText = cube3.markBoost;
         
         const filtered = Object.keys(cube3.stats).filter(key => cube3.is818(key) && cube3.stats[key].times > 0);
         const progress = filtered.length;
@@ -646,8 +707,7 @@ function saveSettings(genScr=false) {
         flipTwist: parseFloat(document.getElementById('flipTwist-slider').value),
         twist3: parseFloat(document.getElementById('twist3-slider').value),
         float3: parseFloat(document.getElementById('float3-slider').value),
-        lr: sliderToLR(parseFloat(document.getElementById('lr-slider').value)),
-        markBoost: parseFloat(document.getElementById('mb-slider').value)
+        lr: sliderToLR(parseFloat(document.getElementById('lr-slider').value))
     };
     cube3.updateSettings(newSettings);
     storage.push('settings', JSON.stringify(newSettings));
@@ -680,15 +740,38 @@ function newScramble() {
 // Command Input
 const commandInputElem = document.getElementsByClassName('command-input')[0];
 const textInput = commandInputElem.getElementsByTagName('input')[0];
+const cmdHint = document.getElementById('cmd-hint');
 let cmd = '';
+
+const hintMap = {
+    '.': 'look up case',
+    '+': 'mark case',
+    '-': 'unmark case',
+    'm': 'save memo  KEY=VAL',
+    'a': 'save alg  KEY=VAL',
+    'd': 'change mode',
+    'c': 'copy latest solves',
+    't': 'top marked cases',
+    'u': 'force refresh',
+    'e': 'open files panel',
+    'i': 'open files panel',
+    'h': 'open help panel'
+};
 
 textInput.addEventListener('focus', () => {
     commandInputElem.classList.add('visible');
     textInput.value = '';
+    cmdHint.textContent = '';
 });
 
 textInput.addEventListener('blur', () => {
     commandInputElem.classList.remove('visible');
+    cmdHint.textContent = '';
+});
+
+textInput.addEventListener('input', () => {
+    const v = textInput.value;
+    cmdHint.textContent = (v.length > 0 && v.length <= 3 && hintMap[v[0]]) ? hintMap[v[0]] : '';
 });
 document.addEventListener('keydown', function(event) {
     // Don't interfere with tutorial navigation - check if tutorial is active
@@ -780,6 +863,7 @@ document.addEventListener('keydown', function(event) {
         cmd = textInput.value.trim();
         textInput.value = '';
         textInput.blur();
+        cmdHint.textContent = '';
         if (cmd.length === 0) return;
         if (cmd[0] === '.') {
             let key = cmd.substring(1).trimStart();
@@ -812,10 +896,61 @@ document.addEventListener('keydown', function(event) {
             } else {
                 print(`Unknown mode: ${modeStr}. Modes: rc, ec, e, c, r`);
             }
-        } else if (cmd === 'c') {
-            const lastSolveInfo = `${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`;
-            navigator.clipboard.writeText(lastSolveInfo).then(() => {
-                print(`Copied: ${timer.finalTimeStr}  ${scrElem.innerText}  @${timer.nowTimeStr}`);
+        } else if (cmd[0] === 'm') {
+            const assignment = parseKeyValueAssignment(cmd.slice(1).trim());
+            if (!assignment) {
+                print('Usage: m KEY=VAL');
+            } else {
+                const key = assignment.key.toUpperCase();
+                cube3.memDict[key] = assignment.value;
+                storage.push('mem', serializeKeyValueMap(cube3.memDict));
+                print(`Memo saved: ${key}`);
+            }
+        } else if (cmd[0] === 'a') {
+            const assignment = parseKeyValueAssignment(cmd.slice(1).trim());
+            if (!assignment) {
+                print('Usage: a KEY=VAL');
+            } else {
+                const key = assignment.key;
+                let value = assignment.value;
+                const autoReverse = value.endsWith('&');
+                if (autoReverse) {
+                    value = value.slice(0, -1).trimEnd();
+                }
+                cube3.algs[key] = value;
+                let msg = `Alg saved: ${key}`;
+                if (autoReverse && key.length === 2) {
+                    const reversedAlg = swapCommutatorParts(value);
+                    if (reversedAlg) {
+                        const reverseKey = key[1] + key[0];
+                        cube3.algs[reverseKey] = reversedAlg;
+                        msg += ` (+ ${reverseKey})`;
+                    } else {
+                        msg += ' (auto-reverse skipped: alg must be [A,B])';
+                    }
+                }
+                storage.push('alg', serializeKeyValueMap(cube3.algs));
+                print(msg);
+            }
+        } else if (cmd[0] === 'c') {
+            const countStr = cmd.slice(1).trim();
+            let count = 1;
+            if (countStr.length > 0) {
+                count = Number.parseInt(countStr, 10);
+                if (!Number.isInteger(count) || count <= 0) {
+                    print('Usage: c NUM, where NUM is a positive integer');
+                    return;
+                }
+            }
+            const history = loadSolveHistory();
+            if (history.length === 0) {
+                print('No solves yet.');
+                return;
+            }
+            const limitedHistory = history.slice(0, count);
+            const text = limitedHistory.map(formatHistoryEntry).join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                print(`copied ${limitedHistory.length} solves`);
             }).catch(err => {
                 print('Failed to copy: ' + err);
             });
@@ -824,11 +959,17 @@ document.addEventListener('keydown', function(event) {
             let topKeys = Object.keys(cube3.stats)
                 .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
             print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
+        } else if (cmd === 'e' || cmd === 'i') {
+            openTutorialAtPanel(3);
+            print('Opened Files panel.');
+        } else if (cmd === 'h') {
+            openTutorialAtPanel(4);
+            print('Opened help panel.');
         } else if (cmd === 'u') {
             storage.loadData();
             forceUpdate();
         } else {
-            print(`? Available commands: .<key>, +<key>, -<key>, d<mode>, c, t, u`);
+            print(`? Available commands: .<key>, +<key>, -<key>, m, a, d<mode>, c NUM, t, e, i, h, u`);
         }
     }
 });

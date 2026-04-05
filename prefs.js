@@ -14,7 +14,6 @@ class Prefs {
         orientation: 'yr',  // Default: Yellow top, Red front
         // Training settings
         lr: 0.1,
-        markBoost: 1,
         mode: 'ec',
         usePar: true,
         twist3: 0,
@@ -33,7 +32,6 @@ class Prefs {
         mem: '',
         // Settings
         lr: null,
-        markBoost: null,
         mode: null,
         usePar: null,
         twist3: null,
@@ -71,7 +69,6 @@ class Prefs {
             try {
                 const settings = JSON.parse(savedSettings);
                 this.current.lr = settings.lr !== undefined ? settings.lr : this.defaults.lr;
-                this.current.markBoost = settings.markBoost !== undefined ? settings.markBoost : this.defaults.markBoost;
                 this.current.mode = settings.mode || this.defaults.mode;
                 this.current.usePar = settings.usePar !== undefined ? settings.usePar : this.defaults.usePar;
                 this.current.twist3 = settings.twist3 !== undefined ? settings.twist3 : this.defaults.twist3;
@@ -99,7 +96,6 @@ class Prefs {
     // Load default settings
     static loadDefaultSettings() {
         this.current.lr = this.defaults.lr;
-        this.current.markBoost = this.defaults.markBoost;
         this.current.mode = this.defaults.mode;
         this.current.usePar = this.defaults.usePar;
         this.current.twist3 = this.defaults.twist3;
@@ -167,9 +163,6 @@ class Prefs {
         if (newSettings.lr !== undefined) {
             this.current.lr = newSettings.lr;
         }
-        if (newSettings.markBoost !== undefined) {
-            this.current.markBoost = newSettings.markBoost;
-        }
         if (newSettings.mode !== undefined) {
             this.current.mode = newSettings.mode;
         }
@@ -189,7 +182,6 @@ class Prefs {
         // Save to localStorage
         const settingsToSave = {
             lr: this.current.lr,
-            markBoost: this.current.markBoost,
             mode: this.current.mode,
             usePar: this.current.usePar,
             twist3: this.current.twist3,
@@ -240,7 +232,6 @@ class Prefs {
     static getSettings() {
         return {
             lr: this.current.lr,
-            markBoost: this.current.markBoost,
             mode: this.current.mode,
             usePar: this.current.usePar,
             twist3: this.current.twist3,

@@ -1,5 +1,5 @@
 
-// 4-Panel Tutorial System with Auto-generation
+// 5-Panel Tutorial System with Auto-generation
 
 // Edge positions in order (matching cube3.js comments)
 // UF FU UL LU UB BU UR RU
@@ -26,57 +26,121 @@ const cornerPositions = [
 // Global currentPanel variable (null when no tutorial is active)
 let currentPanel = null;
 let edgeInput, cornerInput, edgeBufferSelect, cornerBufferSelect;
+let tutorialInitialized = false;
+let tutorialInitialBuffers = null;
 
-function checkAndShowTutorial() {
-    const seenTutorial = localStorage.getItem('bld.seenTutorial');
-    if (!seenTutorial) {
-        const modal = document.getElementById('tutorial-modal');
-        if (modal) {
-            modal.style.display = 'block';
-            currentPanel = 1; // Set currentPanel when tutorial is active
-            initTutorial();
+function captureInitialBufferSnapshot() {
+    try {
+        const savedConfig = localStorage.getItem('bld.userPrefs');
+        if (savedConfig) {
+            const parsed = JSON.parse(savedConfig);
+            const edge = Number.parseInt(parsed.edgeBuffer, 10);
+            const corner = Number.parseInt(parsed.cornerBuffer, 10);
+            tutorialInitialBuffers = {
+                edge: Number.isNaN(edge) ? null : edge,
+                corner: Number.isNaN(corner) ? null : corner
+            };
+            return;
         }
+    } catch (e) {
+        console.error('Error capturing initial buffer snapshot:', e);
+    }
+    const prefEdge = Number.parseInt(Prefs.current.edgeBuffer, 10);
+    const prefCorner = Number.parseInt(Prefs.current.cornerBuffer, 10);
+    tutorialInitialBuffers = {
+        edge: Number.isNaN(prefEdge) ? null : prefEdge,
+        corner: Number.isNaN(prefCorner) ? null : prefCorner
+    };
+}
+
+function getTutorialFocusableElements() {
+    const modal = document.getElementById('tutorial-modal');
+    if (!modal) return [];
+    const selector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+    return Array.from(modal.querySelectorAll(selector))
+        .filter(el => el.offsetParent !== null || el === document.activeElement);
+}
+
+function focusFirstTutorialControl() {
+    const focusable = getTutorialFocusableElements();
+    if (focusable.length > 0) {
+        focusable[0].focus();
     }
 }
 
-function initTutorial() {
-    showPanel(1);
-    
-    // Initialize form elements for panel 2
+function openTutorialModal() {
+    const modal = document.getElementById('tutorial-modal');
+    if (!modal) return false;
+    modal.style.display = 'block';
+    focusFirstTutorialControl();
+    return true;
+}
+
+function closeTutorialModal() {
+    const modal = document.getElementById('tutorial-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    const restartBtn = document.getElementById('tutorial-restart-btn');
+    if (restartBtn) {
+        restartBtn.focus();
+    }
+}
+
+function ensureTutorialInputs() {
     edgeInput = document.getElementById('edge-scheme-input');
     cornerInput = document.getElementById('corner-scheme-input');
     edgeBufferSelect = document.getElementById('edge-buffer-select');
     cornerBufferSelect = document.getElementById('corner-buffer-select');
+
+    if (tutorialInitialized) return;
+    tutorialInitialized = true;
     
-    // Load saved config if exists
-    const savedConfig = localStorage.getItem('bld.userPrefs');
-    if (savedConfig) {
-        try {
-            const config = JSON.parse(savedConfig);
-            document.getElementById('orientation-select').value = config.orientation || 'yr';
-            edgeInput.value = config.edgeScheme || '';
-            edgeBufferSelect.value = config.edgeBuffer || '0';
-            cornerInput.value = config.cornerScheme || '';
-            cornerBufferSelect.value = config.cornerBuffer || '0';
-        } catch (e) {
-            console.error('Error loading saved config:', e);
-        }
-    }
-    
-    // Add input event listeners
     if (edgeInput) {
         edgeInput.addEventListener('input', handleEdgeInput);
-        edgeInput.addEventListener('change', handleEdgeInput); // Handle autofill
+        edgeInput.addEventListener('change', handleEdgeInput);
         edgeInput.addEventListener('focus', () => updateInputHint(edgeInput, edgePositions));
         edgeInput.addEventListener('blur', () => clearInputHint(edgeInput));
     }
     
     if (cornerInput) {
         cornerInput.addEventListener('input', handleCornerInput);
-        cornerInput.addEventListener('change', handleCornerInput); // Handle autofill
+        cornerInput.addEventListener('change', handleCornerInput);
         cornerInput.addEventListener('focus', () => updateInputHint(cornerInput, cornerPositions));
         cornerInput.addEventListener('blur', () => clearInputHint(cornerInput));
     }
+}
+
+function loadSavedTutorialConfig() {
+    const savedConfig = localStorage.getItem('bld.userPrefs');
+    if (!savedConfig) return;
+    try {
+        const config = JSON.parse(savedConfig);
+        document.getElementById('orientation-select').value = config.orientation || 'yr';
+        if (edgeInput) edgeInput.value = config.edgeScheme || '';
+        if (edgeBufferSelect) edgeBufferSelect.value = config.edgeBuffer || '0';
+        if (cornerInput) cornerInput.value = config.cornerScheme || '';
+        if (cornerBufferSelect) cornerBufferSelect.value = config.cornerBuffer || '0';
+    } catch (e) {
+        console.error('Error loading saved config:', e);
+    }
+}
+
+function checkAndShowTutorial() {
+    const seenTutorial = localStorage.getItem('bld.seenTutorial');
+    if (!seenTutorial) {
+        if (openTutorialModal()) {
+            currentPanel = 1; // Set currentPanel when tutorial is active
+            initTutorial();
+        }
+    }
+}
+
+function initTutorial(startPanel = 1) {
+    ensureTutorialInputs();
+    loadSavedTutorialConfig();
+    captureInitialBufferSnapshot();
+    showPanel(startPanel);
 }
 
 // Function to restart tutorial from main settings
@@ -91,9 +155,7 @@ function restartTutorial() {
     localStorage.removeItem('bld.seenTutorial');
     
     // Show tutorial modal
-    const modal = document.getElementById('tutorial-modal');
-    if (modal) {
-        modal.style.display = 'block';
+    if (openTutorialModal()) {
         currentPanel = 1; // Set currentPanel when tutorial is active
         initTutorial();
     }
@@ -101,6 +163,10 @@ function restartTutorial() {
 
 function tutorialNavigate(direction) {
     const newPanel = currentPanel + direction;
+    if (direction < 0) {
+        if (newPanel >= 1) tutorialGoTo(newPanel);
+        return;
+    }
     
     if (newPanel === 2 && direction === 1) {
         // Going to panel 2, no validation needed
@@ -113,6 +179,8 @@ function tutorialNavigate(direction) {
         saveConfig();
         tutorialGoTo(newPanel);
     } else if (newPanel === 5 && direction === 1) {
+        tutorialGoTo(newPanel);
+    } else if (newPanel === 6 && direction === 1) {
         // Finish tutorial - validate config and redirect if needed
         if (!validateConfig()) {
             alert('Please configure your letter schemes first.');
@@ -132,7 +200,7 @@ function showPanel(panel) {
     currentPanel = panel;
     
     // Hide all panels
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 5; i++) {
         const panelElement = document.getElementById(`tutorial-panel-${i}`);
         if (panelElement) {
             panelElement.style.display = 'none';
@@ -150,8 +218,10 @@ function showPanel(panel) {
     dots.forEach((dot, index) => {
         if (index + 1 === panel) {
             dot.classList.add('active');
+            dot.setAttribute('aria-current', 'step');
         } else {
             dot.classList.remove('active');
+            dot.setAttribute('aria-current', 'false');
         }
     });
     
@@ -159,7 +229,7 @@ function showPanel(panel) {
     const nextBtn = document.getElementById('tutorial-next-btn');
     
     if (nextBtn) {
-        if (panel === 4) {
+        if (panel === 5) {
             nextBtn.textContent = 'Finish!';
         } else {
             nextBtn.textContent = 'Next →';
@@ -178,8 +248,8 @@ function showPanel(panel) {
 
 function finishTutorial() {
     // Get previous config for comparison
-    const previousEdgeBuffer = window.Prefs ? parseInt(Prefs.current.edgeBuffer) : null;
-    const previousCornerBuffer = window.Prefs ? parseInt(Prefs.current.cornerBuffer) : null;
+    const previousEdgeBuffer = tutorialInitialBuffers ? tutorialInitialBuffers.edge : null;
+    const previousCornerBuffer = tutorialInitialBuffers ? tutorialInitialBuffers.corner : null;
     
     // Check if stats exist
     const statsStr = localStorage.getItem('bld.stats');
@@ -195,9 +265,12 @@ function finishTutorial() {
     };
     
     // Check if buffer changed
-    const bufferChanged = !isNaN(previousEdgeBuffer) && 
-        (previousEdgeBuffer !== parseInt(newConfig.edgeBuffer) || 
-         previousCornerBuffer !== parseInt(newConfig.cornerBuffer));
+    const nextEdgeBuffer = Number.parseInt(newConfig.edgeBuffer, 10);
+    const nextCornerBuffer = Number.parseInt(newConfig.cornerBuffer, 10);
+    const hasValidPrevious = previousEdgeBuffer !== null && previousCornerBuffer !== null;
+    const hasValidNext = !Number.isNaN(nextEdgeBuffer) && !Number.isNaN(nextCornerBuffer);
+    const bufferChanged = hasValidPrevious && hasValidNext &&
+        (previousEdgeBuffer !== nextEdgeBuffer || previousCornerBuffer !== nextCornerBuffer);
     
     // If buffer changed and stats exist, warn user
     if (bufferChanged && hasStats) {
@@ -230,16 +303,96 @@ function finishTutorial() {
         }
         
         // Close tutorial modal
-        const modal = document.getElementById('tutorial-modal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
+        closeTutorialModal();
         currentPanel = null;
         localStorage.setItem('bld.seenTutorial', '1');
         
         // Generate first scramble immediately
         newScramble();
     });
+}
+
+function openTutorialAtPanel(panel) {
+    if (!openTutorialModal()) return;
+    currentPanel = panel;
+    ensureTutorialInputs();
+    loadSavedTutorialConfig();
+    captureInitialBufferSnapshot();
+    showPanel(panel);
+    focusFirstTutorialControl();
+}
+
+function getAllBackupData() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('bld.')) {
+            data[key] = localStorage.getItem(key);
+        }
+    }
+    return data;
+}
+
+function exportBackupData() {
+    const payload = getAllBackupData();
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = `${now.getMonth() + 1}`.padStart(2, '0');
+    const d = `${now.getDate()}`.padStart(2, '0');
+    const fileName = `ufufr-backup-${y}${m}${d}.json`;
+    downloadFile(JSON.stringify(payload, null, 2), fileName);
+}
+
+function importBackupData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const recognized = new Set([
+        'bld.userPrefs',
+        'bld.settings',
+        'bld.stats',
+        'bld.alg',
+        'bld.mem',
+        'bld.history',
+        'bld.seenTutorial'
+    ]);
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const parsed = JSON.parse(e.target.result);
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                throw new Error('Backup must be a JSON object.');
+            }
+            let importedCount = 0;
+            Object.keys(parsed).forEach(key => {
+                if (!recognized.has(key)) return;
+                if (typeof parsed[key] !== 'string') return;
+                localStorage.setItem(key, parsed[key]);
+                importedCount++;
+            });
+            if (window.Prefs && typeof Prefs.init === 'function') {
+                Prefs.init();
+            }
+            if (typeof initializeCube3 === 'function') {
+                initializeCube3();
+            }
+            if (window.drawCube && typeof window.drawCube.refresh === 'function') {
+                window.drawCube.refresh();
+            }
+            if (window.storage && typeof window.storage.loadData === 'function') {
+                window.storage.loadData();
+            }
+            if (typeof newScramble === 'function') {
+                newScramble();
+            }
+            alert(`Backup imported (${importedCount} keys).`);
+        } catch (err) {
+            console.error('Failed to import backup:', err);
+            alert(`Import failed: ${err.message}`);
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.readAsText(file);
 }
 
 // Input validation and handling functions
@@ -708,13 +861,31 @@ document.addEventListener('keydown', function(event) {
     const tutorialModal = document.getElementById('tutorial-modal');
     
     if (tutorialModal && tutorialModal.style.display === 'block') {
+        if (event.key === 'Tab') {
+            const focusable = getTutorialFocusableElements();
+            if (focusable.length > 0) {
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                    return;
+                }
+                if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                    return;
+                }
+            }
+        }
+
         if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'Enter') {
             event.preventDefault();
             tutorialNavigate(1);
             return;
         }
         
-        if (event.key >= '1' && event.key <= '4') {
+        if (event.key >= '1' && event.key <= '5') {
             event.preventDefault();
             tutorialGoTo(parseInt(event.key));
             return;

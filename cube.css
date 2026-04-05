@@ -52,6 +52,7 @@ body {
     margin: 20px;
 }
 .command-input {
+    position: relative;
     position: fixed;
     bottom: 25%;
     left: 50%;
@@ -86,6 +87,17 @@ body {
 }
 .command-input input::placeholder {
     color: var(--text-muted);
+}
+.cmd-hint {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0.5;
+    white-space: nowrap;
 }
 .text-output div {
     padding: 10px;
@@ -493,6 +505,8 @@ body {
 }
 
 .tutorial-dot {
+    border: none;
+    padding: 0;
     width: 12px;
     height: 12px;
     border-radius: 50%;
@@ -507,6 +521,11 @@ body {
 
 .tutorial-dot:hover {
     background-color: var(--accent-hover);
+}
+
+.tutorial-dot:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
 }
 
 #tutorial-next-btn {

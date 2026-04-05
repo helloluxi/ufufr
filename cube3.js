@@ -51,7 +51,6 @@ class Cube3 {
         // Load settings from Prefs
         const settings = Prefs.getSettings();
         this.lr = settings.lr;
-        this.markBoost = settings.markBoost;
         this.mode = settings.mode;
         this.usePar = settings.usePar;
         this.twist3 = settings.twist3;
@@ -81,7 +80,6 @@ class Cube3 {
 
     updateSettings(settings) {
         this.lr = settings.lr || this.lr;
-        this.markBoost = settings.markBoost || this.markBoost;
         this.mode = settings.mode || this.mode;
         this.twist3 = settings.twist3 || this.twist3;
         this.flipTwist = settings.flipTwist || this.flipTwist;
@@ -91,7 +89,6 @@ class Cube3 {
         // Update Prefs
         Prefs.updateSettings({
             lr: this.lr,
-            markBoost: this.markBoost,
             mode: this.mode,
             usePar: this.usePar,
             twist3: this.twist3,
@@ -238,7 +235,7 @@ class Cube3 {
     getWeight(key) {
         const stat = this.stats[key];
         if (!stat) return 0;
-        return stat.times === 0 ? this.lr : (stat.mark ? this.markBoost : 1) * Math.pow(stat.times, -2 / (1 + stat.mark));
+        return stat.times === 0 ? this.lr : Math.pow(stat.times, -2 / (1 + stat.mark));
     }
 
     genCode(cat, maxCount, resList) {

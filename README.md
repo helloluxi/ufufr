@@ -19,7 +19,7 @@ In competition, scrambles are truly random—every case has equal probability (y
 
 The training algorithm uses a weighted sampling system:
 
-- **Learned cases** : `(mark ? markBoost : 1) × times^(-2/(1 + mark))`
+- **Learned cases** : `times^(-2/(1 + mark))`
 - **New cases** : Learning rate in your settings
 
 The choice of weight function is more like a heuristic than a rigorously tested formula, so feel free to tweak to suit your learning style.
@@ -35,9 +35,14 @@ The choice of weight function is more like a heuristic than a rigorously tested 
 
 You can customize the following files to personalize your training experience:
 
-#### Memo Words ([mem.txt](mem.txt))
+#### Memo Words (format reference)
 
-Fill in your memorization words/images for each letter pair.
+Fill in your memorization words/images for each letter pair, using `KEY=VALUE` lines:
+
+```txt
+CF=coffee
+DN=donut
+```
 
 #### Algorithms ([alg.txt](alg.txt))
 
@@ -95,14 +100,21 @@ The app includes a command-line interface for advanced operations. Access it by:
 - Double-clicking/double-tapping the cube display
 - Or simply start typing (it will auto-open)
 
+`h` opens the terminal help panel in the tutorial (currently panel 4).
+
 | Command | Description | Example |
 |---------|-------------|---------|
 | `.KEY` | Look up info for a specific case | `.CG` shows memo, alg, and stats for CG |
 | `+KEY1 KEY2 ...` | Manually add marks to cases | `+CG c+g+` marks CG and c+g+ |
 | `-KEY1 KEY2 ...` | Remove marks and reset case | `-CG` resets CG to unmarked state |
-| `c` | Copy time, scramble, timestamp to clipboard | `c`  |
+| `m KEY=VAL` | Save/update one memo entry | `m CG=coffee` |
+| `a KEY=VAL` | Save/update one algorithm entry | `a CG=[R U R',D]` |
+| `a KEY=VAL&` | Save alg and auto-create reverse pair for commutators | `a CG=[R U R',D]&` |
+| `c NUM` | Copy latest `NUM` solves (time, scramble, timestamp), default = 1 | `c 5` |
 | `d MODE` | Change training mode | `d e` switches to edge-only mode |
 | `t` | Show top 7 most marked cases | `t` |
+| `e` / `i` | Open Files panel (export/import UI) | `e` |
+| `h` | Open terminal help panel in tutorial | `h` |
 | `u` | Force reload service worker | `u` |
 
 Press `Enter` to execute commands. Press `↑` (up arrow) to recall the last command.
@@ -129,9 +141,21 @@ All data is stored in browser localStorage:
 - **Seen Tutorial**: Whether you've seen the tutorial (`bld.seenTutorial`)
 - **Stats**: Practice counts and marks for each case (`bld.stats`)
 - **Settings**: User preferences (`bld.settings`)
-- **Static Files**: `alg.txt` and `mem.txt` are loaded from web server
+- **Algs & Memo**: Uploaded/edited data (`bld.alg`, `bld.mem`)
+- **Solve History**: Rolling latest 100 solves (`bld.history`)
 
 No phone-home are used. Your data is yours.
+
+## File Formats
+
+### alg.txt and mem.txt
+
+Each line is `KEY=VALUE`. Lines without `=` and blank lines are ignored.
+
+- **alg.txt** - KEY is a letter pair in your scheme; VALUE is anything you want displayed (algorithm, move count, nickname). Stored and shown verbatim.
+- **mem.txt** - KEY is a letter pair; VALUE is your memo word or image for that pair.
+
+You can edit individual entries any time with terminal commands `a KEY=VAL` and `m KEY=VAL`, without re-uploading the whole file.
 
 ### Offline Support & Service Worker
 
@@ -176,18 +200,7 @@ The best way to use this project is to fork it and manage your own version contr
 
 Copyright (C) 2025-2026 Xi Lu
 
-This project is licensed under the **GNU General Public License v3.0 (GPLv3)**.
-
-This means:
-- ✅ You are free to use, modify, and distribute this software
-- ✅ You can use it for commercial purposes
-- ⚠️ If you distribute modified versions, you must:
-  - Also license them under GPLv3
-  - Make your source code available
-  - Document your changes
-- ⚠️ This software comes with NO WARRANTY
-
-See the [LICENSE](LICENSE) file for the complete license text.
+This project is licensed under the **GNU General Public License v3.0 (GPLv3)**, see [LICENSE](LICENSE).
 
 ---
 
