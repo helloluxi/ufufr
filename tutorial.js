@@ -111,6 +111,34 @@ function ensureTutorialInputs() {
     }
 }
 
+function applySchemePreset(idx) {
+    const preset = Prefs.PRESETS[parseInt(idx)];
+    if (!preset) return;
+    if (edgeInput) edgeInput.value = preset.edge;
+    if (cornerInput) cornerInput.value = preset.corner;
+    if (edgeInput) updateInputHint(edgeInput, edgePositions);
+    if (cornerInput) updateInputHint(cornerInput, cornerPositions);
+    validateConfig();
+}
+
+function expandEdgeToCorner() {
+    if (!edgeInput || !cornerInput) return;
+    const edge = edgeInput.value;
+    if (edge.length !== 24) { alert('Please enter a complete 24-letter edge scheme first.'); return; }
+    cornerInput.value = Array.from(Cube3.cornExpandEdge, i => edge[i].toLowerCase()).join('');
+    updateInputHint(cornerInput, cornerPositions);
+    validateConfig();
+}
+
+function expandCornerToEdge() {
+    if (!edgeInput || !cornerInput) return;
+    const corner = cornerInput.value;
+    if (corner.length !== 24) { alert('Please enter a complete 24-letter corner scheme first.'); return; }
+    edgeInput.value = Array.from(Cube3.edgeFromCorn, j => corner[j].toUpperCase()).join('');
+    updateInputHint(edgeInput, edgePositions);
+    validateConfig();
+}
+
 function loadSavedTutorialConfig() {
     const savedConfig = localStorage.getItem('bld.userPrefs');
     if (!savedConfig) return;

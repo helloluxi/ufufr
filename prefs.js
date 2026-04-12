@@ -3,6 +3,11 @@
 // Single source of truth for all user configuration
 
 class Prefs {
+    static PRESETS = [
+        { name: 'Chichu', edge: 'ABCDEFGHIJKLMNOPQRSTWXYZ', corner: 'ahqcbtedwgfzilsknxmpyojr' },
+        { name: 'Speffz', edge: 'CIDEAQBMUKXGWSVOJPLFRHTN', corner: 'cmjdihaerbqnuglxsfwtovkp' },
+    ];
+
     // Default letter schemes and buffers
     static defaults = {
         // UF FU UL LU UB BU UR RU DF FD DL LD DB BD DR RD FR RF FL LF BL LB BR RB

@@ -97,7 +97,7 @@
                 <div class="tutorial-text">
                     <div class="setting">
                         <label for="orientation-select">Orientation</label>
-                        <select id="orientation-select" style="flex: 0 0 310px;">
+                        <select id="orientation-select" style="flex: 0 0 310px;" onchange="syncPresetDropdown()">
                             <option value="yr">Yellow Top - Red    Facing</option>
                             <option value="yo">Yellow Top - Orange Facing</option>
                             <option value="yb">Yellow Top - Blue   Facing</option>
@@ -160,6 +160,20 @@
                     <div class="setting">
                         <label for="corner-scheme-input">Corner Letter Scheme</label>
                         <input type="text" id="corner-scheme-input" value="" maxlength="24" style="flex: 0 0 280px; font-family: monospace; font-size: 0.9em; text-align: left;" placeholder="Enter 24 letters..." spellcheck="false" />
+                    </div>
+                    <div class="setting">
+                        <label>Presets</label>
+                        <div style="display: flex; gap: 8px; flex: 0 0 280px;">
+                            <button class="download-btn" onclick="applySchemePreset(0)" style="flex: 1;">Chichu</button>
+                            <button class="download-btn" onclick="applySchemePreset(1)" style="flex: 1;">Speffz</button>
+                        </div>
+                    </div>
+                    <div class="setting">
+                        <label>Speffz Expansion</label>
+                        <div style="display: flex; gap: 8px; flex: 0 0 280px;">
+                            <button class="download-btn" onclick="expandEdgeToCorner()" style="flex: 1;" title="Fill corner scheme from edge scheme">Edge → Corner</button>
+                            <button class="download-btn" onclick="expandCornerToEdge()" style="flex: 1;" title="Fill edge scheme from corner scheme">Corner → Edge</button>
+                        </div>
                     </div>
                 </div>
             </div>

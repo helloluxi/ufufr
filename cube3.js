@@ -28,6 +28,18 @@ class Cube3 {
     static edgeIdxOnCube = [7, 19, 3, 37, 1, 46, 5, 10, 28, 25, 30, 43, 34, 52, 32, 16, 23, 12, 21, 41, 50, 39, 48, 14];
     static cornIdxOnCube = [8, 9, 20, 6, 18, 38, 0, 36, 47, 2, 45, 11, 27, 44, 24, 33, 53, 42, 35, 17, 51, 29, 26, 15];
     static eFaces = ['uf', 'ul', 'ub', 'ur', 'df', 'dl', 'db', 'dr', 'fr', 'fl', 'bl', 'br'];
+    // cornExpandEdge[i] = edge sticker index that speffz-expands to corner sticker index i
+    // edge → corner: Array.from(Cube3.cornExpandEdge, i => edgeScheme[i].toLowerCase()).join('')
+    static cornExpandEdge = [
+         0,  7, 16,  2,  1, 19,  4,  3, 20,  6,  5, 23,
+         8, 11, 18, 10, 13, 21, 12, 15, 22, 14,  9, 17
+    ];
+    // edgeFromCorn[i] = corner sticker index whose speffz expansion is edge sticker index i
+    // corner → edge: Array.from(Cube3.edgeFromCorn, j => cornerScheme[j].toUpperCase()).join('')
+    static edgeFromCorn = [
+         0,  4,  3,  7,  6, 10,  9,  1, 12, 22, 15, 13,
+        18, 16, 21, 19,  2, 23, 14,  5,  8, 17, 20, 11
+    ];
 
     constructor() {
         // Build index mappings from current Prefs configuration
