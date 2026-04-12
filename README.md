@@ -11,7 +11,7 @@ This project is more like a codebase than a polished product. I encourage you to
 
 **TL;DR:** Simulating competition ≠ efficient training, weak cases should appear more often.
 
-In competition, scrambles are truly random—every case has equal probability (yes I know it will be slightly different based on cycle break strategies). However, this randomness is inefficient for training. Let's say if you've mastered 800 out of 818 cases (instant recall, flawless execution) but still struggle with 18 specific cases (slow recall or occasional errors), random scrambles waste your time repeatedly practicing cases you've already mastered. Occasional practice with fully random scrambles is still beneficial.
+In competition, scrambles are truly random—every case has equal probability (yes I know it will be slightly different based on cycle break strategies). However, this randomness is inefficient for training. If you've mastered 800 out of 818 cases (instant recall, flawless execution) but still struggle with 18 specific cases (slow recall or occasional errors), random scrambles waste your time repeatedly practicing cases you've already mastered. Occasional practice with fully random scrambles is still beneficial.
 
 **The Key Insight:** Adaptive frequency training is more efficient. Cases you struggle with should appear more frequently in practice than cases you've mastered. This tool implements this philosophy by allowing you to mark difficult cases, which then automatically appear with higher frequency in subsequent scrambles. This philosophy was inspired by the touch typing training website [keybr.com](https://www.keybr.com/), as well as general principles of deliberate practice used by athletes, musicians, and surgeons.
 
@@ -28,34 +28,31 @@ The choice of weight function is more like a heuristic than a rigorously tested 
 
 ### Installation
 
-1. **Fork this repository** - This is highly recommended as you'll want to do version control and data management (Contributions from the open-source community are also welcome to make accessible improvements!)
+1. **Fork this repository** - Highly recommended for version control and data management.
 2. Clone your fork to your local machine and use locally / on your Github pages / on your own web server (with your favorite data syncing backend!)
 
 ### Customization (Optional)
 
-You can customize the following files to personalize your training experience:
-
-#### Memo Words (format reference)
-
-Fill in your memorization words/images for each letter pair, using `KEY=VALUE` lines:
+Both [alg.txt](alg.txt) and mem.txt use `KEY=VALUE` format — one entry per line, blank lines and lines without `=` are ignored:
 
 ```txt
 CF=coffee
 DN=donut
 ```
 
-#### Algorithms ([alg.txt](alg.txt))
+- **mem.txt** — memo words/images for each letter pair
+- **alg.txt** — algorithms for each case (stored and shown verbatim)
 
-Add your algorithms for each case.
+You can also edit individual entries via the terminal (`a KEY=VAL`, `m KEY=VAL`) without re-uploading the whole file.
 
-Other settings like letter schemes, buffer positions, and color mappings can be configured directly through the settings panel in the app.
+Other settings like letter schemes, buffer positions, and color mappings can be configured in the settings panel.
 
 ## Usage Guide
 
 ### Using the Timer
 
-- **Start Timer**: Long-press (hold) anywhere or press the spacebar on the cube display until it turns green
-- **Stop Timer**: Tap the cube display while timer is running or press any key to stop
+- **Start Timer**: Long-press the cube display or hold the spacebar until it turns green
+- **Stop Timer**: Tap the cube display or press any key while the timer is running
 
 ### Case Statistics Format
 
@@ -144,18 +141,7 @@ All data is stored in browser localStorage:
 - **Algs & Memo**: Uploaded/edited data (`bld.alg`, `bld.mem`)
 - **Solve History**: Rolling latest 100 solves (`bld.history`)
 
-No phone-home are used. Your data is yours.
-
-## File Formats
-
-### alg.txt and mem.txt
-
-Each line is `KEY=VALUE`. Lines without `=` and blank lines are ignored.
-
-- **alg.txt** - KEY is a letter pair in your scheme; VALUE is anything you want displayed (algorithm, move count, nickname). Stored and shown verbatim.
-- **mem.txt** - KEY is a letter pair; VALUE is your memo word or image for that pair.
-
-You can edit individual entries any time with terminal commands `a KEY=VAL` and `m KEY=VAL`, without re-uploading the whole file.
+No data is sent anywhere. Your data stays on your device.
 
 ### Offline Support & Service Worker
 
@@ -174,12 +160,6 @@ This application can be installed as a Progressive Web App:
 - Once installed, it works offline and feels like a native app
 - Updates are managed by the service worker
 
-## Philosophy: Build Your Own
-
-**This tool embodies a practice philosophy, not a one-size-fits-all solution.** I strongly encourage you to understand the principles and implement your own version tailored to your specific needs.
-
-Every BLDer has unique preferences: different letter schemes, different memo systems, different weak spots, different advanced techniques like LTCT. The most effective training tool is one you've customized yourself.
-
 ## Maintenance & Support
 
 This repository is **not actively maintained** as I am not an active competitor. It's a personal training tool shared publicly for educational purposes.
@@ -188,8 +168,7 @@ This repository is **not actively maintained** as I am not an active competitor.
 - **Feature requests**: No, please fork and implement your own features
 - **Donate**: Buy me a coffee if you meet me in a WCA competition :)
 
-I personally use a customized version of this tool hosted on my own private server and haven't tested the public demo extensively.
-The best way to use this project is to fork it and manage your own version control and data.
+I personally use a customized version hosted on a private server — the public demo is not extensively tested.
 
 ## Acknowledgements
 
