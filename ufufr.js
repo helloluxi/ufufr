@@ -717,14 +717,18 @@ function saveSettings(genScr=false) {
 
 
 
+function getButtonLabel(button) {
+    return button.childNodes[0]?.nodeValue?.trim() || button.textContent.trim();
+}
+
 function onClickNext() {
     const activeButtons = document.querySelectorAll('.toggle-btn.active');
-    const activeButtonNames = Array.from(activeButtons).map(btn => btn.textContent);
+    const activeButtonNames = Array.from(activeButtons).map(getButtonLabel);
+    cube3.addTimes();
     if (activeButtonNames.length > 0) {
         cube3.addMark(activeButtonNames);
         print(`Add marks: ${activeButtonNames.map(x => `${x}(${cube3.stats[x].mark}/${cube3.stats[x].times})`).join(', ')}`);
     }
-    cube3.addTimes();
     storage.saveStats();
     newScramble();
 }
