@@ -109,7 +109,7 @@ The app includes a command-line interface for advanced operations. Access it by:
 | `a KEY=VAL&` | Save alg and auto-create reverse pair for commutators | `a CG=[R U R',D]&` |
 | `c NUM` | Copy latest `NUM` solves (time, scramble, timestamp), default = 1 | `c 5` |
 | `d MODE` | Change training mode | `d e` switches to edge-only mode |
-| `t` | Show top 7 most marked cases | `t` |
+| `t CAT` | Show top 7 most marked cases, optionally filtered by category | `t par` |
 | `e` / `i` | Open Files panel (export/import UI) | `e` |
 | `h` | Open terminal help panel in tutorial | `h` |
 | `u` | Force reload service worker | `u` |

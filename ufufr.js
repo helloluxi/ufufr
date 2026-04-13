@@ -958,11 +958,13 @@ document.addEventListener('keydown', function(event) {
             }).catch(err => {
                 print('Failed to copy: ' + err);
             });
-        } else if (cmd === 't') {
-            const numTop = 7;
+        } else if (cmd === 't' || cmd.startsWith('t ')) {
+            const cat = cmd.slice(2);
             let topKeys = Object.keys(cube3.stats)
-                .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times)).slice(0, numTop);
-            print(`Top ${numTop} marks: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
+                .filter(key => (cat ? cube3.stats[key].cat === cat : cube3.is818(key)) && cube3.stats[key].mark > 0)
+                .sort((a, b) => (cube3.stats[b].mark - cube3.stats[a].mark) || (cube3.stats[a].times - cube3.stats[b].times))
+                .slice(0, 7);
+            print(`Top ${topKeys.length}: ${topKeys.map(key => `${key}(${cube3.stats[key].mark}/${cube3.stats[key].times})`).join(', ')}`);
         } else if (cmd === 'e' || cmd === 'i') {
             openTutorialAtPanel(3);
             print('Opened Files panel.');
