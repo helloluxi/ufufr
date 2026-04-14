@@ -576,6 +576,7 @@ class Timer {
             this.commandOutput.textContent = `Time: ${this.finalTimeStr}`;
             appendSolveHistory(finalTime, scrElem ? scrElem.innerText : '');
             this.isTimerRunning = false;
+            this.lastStopTime = Date.now();
         }
         this.timerContainer.style.display = 'none';
     }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'helloluxi-ufufr-c76ff04';
+const CACHE_NAME = 'helloluxi-ufufr-0ad705a';
 const urlsToCache = [
     './',
     './alg.txt',
