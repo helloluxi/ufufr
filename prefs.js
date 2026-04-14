@@ -20,7 +20,7 @@ class Prefs {
         // Training settings
         lr: 0.1,
         mode: 'ec',
-        usePar: true,
+        parityMode: 'any',
         twist3: 0,
         flipTwist: 0,
         float3: 0
@@ -38,7 +38,7 @@ class Prefs {
         // Settings
         lr: null,
         mode: null,
-        usePar: null,
+        parityMode: null,
         twist3: null,
         flipTwist: null,
         float3: null
@@ -75,7 +75,7 @@ class Prefs {
                 const settings = JSON.parse(savedSettings);
                 this.current.lr = settings.lr !== undefined ? settings.lr : this.defaults.lr;
                 this.current.mode = settings.mode || this.defaults.mode;
-                this.current.usePar = settings.usePar !== undefined ? settings.usePar : this.defaults.usePar;
+                this.current.parityMode = settings.parityMode || this.defaults.parityMode;
                 this.current.twist3 = settings.twist3 !== undefined ? settings.twist3 : this.defaults.twist3;
                 this.current.flipTwist = settings.flipTwist !== undefined ? settings.flipTwist : this.defaults.flipTwist;
                 this.current.float3 = settings.float3 !== undefined ? settings.float3 : this.defaults.float3;
@@ -102,7 +102,7 @@ class Prefs {
     static loadDefaultSettings() {
         this.current.lr = this.defaults.lr;
         this.current.mode = this.defaults.mode;
-        this.current.usePar = this.defaults.usePar;
+        this.current.parityMode = this.defaults.parityMode;
         this.current.twist3 = this.defaults.twist3;
         this.current.flipTwist = this.defaults.flipTwist;
         this.current.float3 = this.defaults.float3;
@@ -171,8 +171,8 @@ class Prefs {
         if (newSettings.mode !== undefined) {
             this.current.mode = newSettings.mode;
         }
-        if (newSettings.usePar !== undefined) {
-            this.current.usePar = newSettings.usePar;
+        if (newSettings.parityMode !== undefined) {
+            this.current.parityMode = newSettings.parityMode;
         }
         if (newSettings.twist3 !== undefined) {
             this.current.twist3 = newSettings.twist3;
@@ -188,7 +188,7 @@ class Prefs {
         const settingsToSave = {
             lr: this.current.lr,
             mode: this.current.mode,
-            usePar: this.current.usePar,
+            parityMode: this.current.parityMode,
             twist3: this.current.twist3,
             flipTwist: this.current.flipTwist,
             float3: this.current.float3
@@ -238,7 +238,7 @@ class Prefs {
         return {
             lr: this.current.lr,
             mode: this.current.mode,
-            usePar: this.current.usePar,
+            parityMode: this.current.parityMode,
             twist3: this.current.twist3,
             flipTwist: this.current.flipTwist,
             float3: this.current.float3

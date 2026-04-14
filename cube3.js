@@ -64,7 +64,7 @@ class Cube3 {
         const settings = Prefs.getSettings();
         this.lr = settings.lr;
         this.mode = settings.mode;
-        this.usePar = settings.usePar;
+        this.parityMode = settings.parityMode;
         this.twist3 = settings.twist3;
         this.flipTwist = settings.flipTwist;
         this.float3 = settings.float3;
@@ -96,13 +96,13 @@ class Cube3 {
         this.twist3 = settings.twist3 || this.twist3;
         this.flipTwist = settings.flipTwist || this.flipTwist;
         this.float3 = settings.float3 || this.float3;
-        this.usePar = settings.usePar != null ? settings.usePar : this.usePar;
+        this.parityMode = settings.parityMode || this.parityMode;
         
         // Update Prefs
         Prefs.updateSettings({
             lr: this.lr,
             mode: this.mode,
-            usePar: this.usePar,
+            parityMode: this.parityMode,
             twist3: this.twist3,
             flipTwist: this.flipTwist,
             float3: this.float3
@@ -361,7 +361,7 @@ class Cube3 {
             this.occupied[Cube3.edgeBufferIdx] = this.occupied[Cube3.cornBufferIdx + 12] = true;
             let sfPar = [];
             let hasPar = 0;
-            if (this.usePar && scrambleE && scrambleC && Math.random() < 0.5) {
+            if (this.parityMode !== 'even' && scrambleE && scrambleC && (this.parityMode === 'odd' || Math.random() < 0.5)) {
                 hasPar = 1;
                 this.genCode('par', 1, sfPar);
             }

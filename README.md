@@ -95,7 +95,7 @@ These badges help you quickly identify which cases you need to practice and whic
 
 The app includes a command-line interface for advanced operations. Access it by:
 - Double-clicking/double-tapping the cube display
-- Or simply start typing (it will auto-open)
+- Or start typing a letter, `.`, `+`, `-`, or `↑` (it will auto-open)
 
 `h` opens the terminal help panel in the tutorial (currently panel 4).
 

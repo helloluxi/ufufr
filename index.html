@@ -26,8 +26,12 @@
                 </select>
             </div>
             <div class="setting">
-                <label for="parity-ckbx">Parity</label>
-                <input type="checkbox" id="parity-ckbx" onchange="saveSettings(true)" />
+                <label for="parity-select">Parity</label>
+                <select id="parity-select" onchange="saveSettings(true)">
+                    <option value="any">Any</option>
+                    <option value="even">Even</option>
+                    <option value="odd">Odd</option>
+                </select>
             </div>
             <div class="setting">
                 <label for="lr-slider" style="width: 200px;">Learning Rate</label>

@@ -679,7 +679,7 @@ function toggleSettingsPanel() {
     panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
     if (panel.style.display === 'flex') {
         document.getElementById('mode-select').value = cube3.mode;
-        document.getElementById('parity-ckbx').checked = cube3.usePar;
+        document.getElementById('parity-select').value = cube3.parityMode;
         document.getElementById('flipTwist-slider').value = cube3.flipTwist;
         document.getElementById('twist3-slider').value = cube3.twist3;
         document.getElementById('float3-slider').value = cube3.float3;
@@ -703,7 +703,7 @@ function toggleSettingsPanel() {
 function saveSettings(genScr=false) {
     const newSettings = {
         mode: document.getElementById('mode-select').value,
-        usePar: document.getElementById('parity-ckbx').checked,
+        parityMode: document.getElementById('parity-select').value,
         flipTwist: parseFloat(document.getElementById('flipTwist-slider').value),
         twist3: parseFloat(document.getElementById('twist3-slider').value),
         float3: parseFloat(document.getElementById('float3-slider').value),
@@ -848,6 +848,10 @@ document.addEventListener('keydown', function(event) {
     if (textInput !== document.activeElement) {
         // Ignore modifier keys
         if (event.metaKey || event.ctrlKey || event.altKey) {
+            return;
+        }
+        // Only open terminal for intentional keys
+        if (!/^[a-zA-Z.+\-]$/.test(event.key) && event.key !== 'ArrowUp') {
             return;
         }
         if (Date.now() - timer.lastStopTime < 300) {
