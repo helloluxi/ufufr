@@ -1,6 +1,6 @@
 {
-  "name": "LuTimer",
-  "short_name": "",
+  "name": "BLD Doctor",
+  "short_name": "BLD Doctor",
   "description": "3BLD",
   "start_url": "./",
   "display": "standalone",

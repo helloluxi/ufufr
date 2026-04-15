@@ -1,4 +1,4 @@
-# Lu Timer（三盲训练器）
+# BLD Doctor（三盲训练网站）
 
 [![en](https://img.shields.io/badge/lang-English-blue.svg)](README.md)
 [![简体中文](https://img.shields.io/badge/lang-简体中文-red.svg)](README.cn.md)

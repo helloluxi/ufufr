@@ -1,4 +1,4 @@
-# Lu Timer (3x3x3 Blindfolded Trainer)
+# BLD Doctor (3x3x3 Blindfolded Trainer Website)
 
 [![en](https://img.shields.io/badge/lang-English-blue.svg)](README.md)
 [![简体中文](https://img.shields.io/badge/lang-简体中文-red.svg)](README.cn.md)
