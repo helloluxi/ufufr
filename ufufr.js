@@ -725,11 +725,11 @@ function getButtonLabel(button) {
 function onClickNext() {
     const activeButtons = document.querySelectorAll('.toggle-btn.active');
     const activeButtonNames = Array.from(activeButtons).map(getButtonLabel);
-    cube3.addTimes();
     if (activeButtonNames.length > 0) {
         cube3.addMark(activeButtonNames);
-        print(`Add marks: ${activeButtonNames.map(x => `${x}(${cube3.stats[x].mark}/${cube3.stats[x].times})`).join(', ')}`);
+        print(`Add marks: ${activeButtonNames.map(x => `${x}(${cube3.stats[x].mark}/${cube3.stats[x].times+1})`).join(', ')}`);
     }
+    cube3.addTimes();
     storage.saveStats();
     newScramble();
 }
