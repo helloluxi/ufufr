@@ -4,7 +4,7 @@
 
 class Prefs {
     static PRESETS = [
-        { name: 'Chichu', edge: 'ABCDEFGHIJKLMNOPQRSTWXYZ', corner: 'ahqcbtedwgfzilsknxmpyojr' },
+        { name: 'Chichu', edge: 'ABCDEFGHIJKLMNOPQRSTWXYZ', corner: 'jklabcdefghiwmnopqrstxyz' },
         { name: 'Speffz', edge: 'CIDEAQBMUKXGWSVOJPLFRHTN', corner: 'cmjdihaerbqnuglxsfwtovkp' },
     ];
 
