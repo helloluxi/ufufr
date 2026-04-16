@@ -107,7 +107,8 @@ The app includes a command-line interface for advanced operations. Access it by:
 | `m KEY=VAL` | Save/update one memo entry | `m CG=coffee` |
 | `a KEY=VAL` | Save/update one algorithm entry | `a CG=[R U R',D]` |
 | `a KEY=VAL&` | Save alg and auto-create reverse pair for commutators | `a CG=[R U R',D]&` |
-| `c NUM` | Copy latest `NUM` solves (time, scramble, timestamp), default = 1 | `c 5` |
+| `x` | Toggle DNF on most recent solve | `x` |
+| `c NUM` | Copy latest `NUM` solves; `c3` includes mo3, `c5` includes ao5 | `c5` |
 | `d MODE` | Change training mode | `d e` switches to edge-only mode |
 | `t CAT` | Show top 7 most marked cases, optionally filtered by category | `t par` |
 | `e` / `i` | Open Files panel (export/import UI) | `e` |
@@ -139,7 +140,7 @@ All data is stored in browser localStorage:
 - **Stats**: Practice counts and marks for each case (`bld.stats`)
 - **Settings**: User preferences (`bld.settings`)
 - **Algs & Memo**: Uploaded/edited data (`bld.alg`, `bld.mem`)
-- **Solve History**: Rolling latest 100 solves (`bld.history`)
+- **Solve History**: Rolling latest 5 solves (in-memory only, not persisted)
 
 No data is sent anywhere. Your data stays on your device.
 
