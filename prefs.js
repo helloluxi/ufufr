@@ -16,7 +16,7 @@ class Prefs {
         cornerScheme: 'ahqcbtedwgfzilsknxmpyojr',
         edgeBuffer: 0,    // 0: UF, 1: UL, 2: UB, 3: UR, 4: DF, 5: DL, 6: DB, 7: DR, 8: FR, 9: FL, 10: BL, 11: BR
         cornerBuffer: 0,  // 0: UFR, 1: UFL, 2: UBL, 3: UBR, 4: DFL, 5: DBL, 6: DBR, 7: DFR
-        orientation: 'yr',  // Default: Yellow top, Red front
+        orientation: 'yr',  // Default: Yellow top, Red facing
         // Training settings
         lr: 0.1,
         mode: 'ec',

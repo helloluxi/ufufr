@@ -853,6 +853,7 @@ document.addEventListener('keydown', function(event) {
         textInput.setSelectionRange(textInput.value.length, textInput.value.length);
     }
     if (event.key === 'Enter') {
+        event.preventDefault();
         cmd = textInput.value.trim();
         textInput.value = '';
         textInput.blur();
