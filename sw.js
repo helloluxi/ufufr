@@ -1,4 +1,4 @@
-const CACHE_NAME = 'helloluxi-ufufr-f6df609';
+const CACHE_NAME = 'helloluxi-ufufr-4cd14f4';
 const urlsToCache = [
     './',
     './alg.txt',
@@ -10,7 +10,8 @@ const urlsToCache = [
     './min2phase.js',
     './prefs.js',
     './tutorial.js',
-    './ufufr.js'
+    './ufufr.js',
+    './version.js'
 ];
 
 self.addEventListener('install', function(event) {
